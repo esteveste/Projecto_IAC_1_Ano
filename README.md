@@ -1,7 +1,5 @@
 # README #
 
-Projecto IAC
-
 Projecto De IAC
 
 newDisp -> lab com o display a funcionar para implementarmos no projecto final
