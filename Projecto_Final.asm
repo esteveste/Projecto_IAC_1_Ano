@@ -23,8 +23,8 @@ linha	                EQU 8H       ; Posição do bit correspondente à linha a 
 local_Ecra_Segmentos	EQU 0A000H 	 ; Endereco do display de 7 segmentos
 out_Teclado	            EQU 0C000H   ; Endereço do porto de escrita do teclado
 in_Teclado		        EQU 0E000H   ; Endereço do porto de leitura do teclado
-nao_pressionada         EQU 0        ; Valor da tecla nao premida
-pressionada             EQU 1        ; Valor da tecla premida
+OFF         EQU 0        ; Valor da tecla nao premida
+ON          EQU 1        ; Valor da tecla premida
 
 
 
@@ -45,13 +45,13 @@ PLACE      0
 inicializacao:		       ; Inicializações gerais
     
 	mov  R9, 0             ; Contador coluna
-	mov  R5, nao_pressionada 		; Vai verificar se a tecla ja foi premida
+	mov  R5, OFF 		; Vai verificar se a tecla ja foi premida
 	mov  R6, 1             ; Vai verificar se display_Inativo/display_Tecla ja correu, para ser executado 1 unica vez
 	mov  sp, fim_Pilha
 
 definir_Linha:             ; Redifine a linha quando o shr chegar a 0
 	mov  R1, linha         ; Valor maximo das linhas  
-	mov  R5,nao_pressionada; Redefine se a tecla esta pressionada, para ser voltada a ser verificada
+	mov  R5,OFF; Redefine se a tecla esta pressionada, para ser voltada a ser verificada
 
 scan_Teclado:              ; Rotina que lê o teclado 
 	mov  R2, out_Teclado   ; R2 fica com o valor 0C000H(porto de escrita)
@@ -76,7 +76,7 @@ estado_Tecla:              ; Verifica se alguma tecla foi clicada durante o varr
 verificar_Ciclo:
 	and  R6,R6             ; Verifica se o display_Inativo já correu
 	jnz  display_Inativo   ; Vai mostrar que nenhuma tecla desta linha foi premida
-	mov  R5, nao_pressionada
+	mov  R5, OFF
 	jmp  definir_Linha     ; Verificar se a tecla premida esta na proxima linha
 	
 display_Inativo:           ; Ecra mostra que nao ha tecla premida
@@ -88,7 +88,7 @@ display_Inativo:           ; Ecra mostra que nao ha tecla premida
 	pop  R9
 	pop  R0
 	mov  R6,0              ; O ciclo do ecra inativo ja foi corrido
-	mov  R5,nao_pressionada; Sem tecla premida
+	mov  R5,OFF; Sem tecla premida
 	jmp  definir_Linha
 	
 tecla_Pressionada:         ; Verifica qual a tecla premida
