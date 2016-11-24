@@ -9,6 +9,7 @@
 ; * Grupo nº:11
 ; * Nomes:	 Bernardo Esteves, Nº87633
 ; *			 Daniela Olivera, Nº87647
+; *			 Bernardo Santos, Nº87635
 ; *
 ; ***********************************************************************
 ;
