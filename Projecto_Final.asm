@@ -24,7 +24,10 @@ out_Teclado	            EQU 0C000H   ; Endereço do porto de escrita do teclado
 in_Teclado		        EQU 0E000H   ; Endereço do porto de leitura do teclado
 MAX_ECRA   EQU 128H      ; Número de bytes do ecrã
 MAX_ELE 	EQU 128
-Tecla_Jogo EQU 12H
+tecla_suspender EQU 0CH
+tecla_about EQU 0AH
+tecla_terminar EQU 0EH
+tecla_jogar EQU 0BH
 local_Ecra	EQU 8000H
 OFF         EQU 0        ; Valor da tecla nao premida
 ON          EQU 1        ; Valor da tecla premida
