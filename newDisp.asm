@@ -154,7 +154,7 @@ inicializacao:
 	mov  sp, fim_Pilha
 
 loop1:
-	mov r0,ecra_inicio
+	mov r0,ecra_fim
 	mov r1,0
 	call ecra_escreve
 	call pausa
@@ -210,7 +210,9 @@ ciclo_ecra:
     MOVB  [R3], R4          ; Escreve o elemento da tabela de strings no ecrã
     ADD   R0, 1             ; Acede ao índice seguinte da tabela de strings
     ADD   R3, 1             ; Avança para o byte seguinte do ecrã
+	call pausa
     SUB   R2, 1             ; Actualiza o contador
+	
     JNZ   ciclo_ecra        ; Volta ao ciclo para escrever o que falta
     POP   R4                ; Recupera registos
     POP   R3
