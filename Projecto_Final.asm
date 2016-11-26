@@ -19,9 +19,12 @@
 
 adr_Tecla_Valor         EQU 100H	 ; Endereço de memória onde se guarda a tecla premida 	
 linha	                EQU 8H       ; Posição do bit correspondente à linha a testar
-local_Ecra_Segmentos	EQU 0A000H 	 ; Endereco do display de 7 segmentos
+local_Segmentos	EQU 0A000H 	 ; Endereco do display de 7 segmentos
 out_Teclado	            EQU 0C000H   ; Endereço do porto de escrita do teclado
 in_Teclado		        EQU 0E000H   ; Endereço do porto de leitura do teclado
+MAX_ECRA   EQU 128H      ; Número de bytes do ecrã
+MAX_ELE 	EQU 128
+local_Ecra	EQU 8000H
 OFF         EQU 0        ; Valor da tecla nao premida
 ON          EQU 1        ; Valor da tecla premida
 
@@ -155,8 +158,8 @@ tab_int:        WORD    int0
 ;PLACE       1500H
 
 tab_estado:
-    WORD  boas_vindas       
-
+    WORD  Welcome       
+	WORD  
 estado_programa:                ; variavel que guarda o estado actual do controlo
     STRING 0H;
 
@@ -168,9 +171,6 @@ PLACE      0
 inicializacao:		       ; Inicializações gerais
 	mov  SP, SP_pilha
 	mov  BTE, tab			;inicializacao BTE
-	mov  R9, 0             ; Contador coluna
-	mov  R5, OFF 		; Vai verificar se a tecla ja foi premida
-	mov  R6, 1             ; Vai verificar se display_Inativo/display_Tecla ja correu, para ser executado 1 unica vez
 
 ; ***********************************************************************
 ; * Estados
@@ -180,12 +180,17 @@ inicializacao:		       ; Inicializações gerais
 ; * R0 R1
 ; ***********************************************************************
 loop_estados:
+	mov R0, estado_programa ; Fazer comentarios diferentes ; Obter o estado actual
+	movb R1, [R0]
+	shl R1,1  ; Multiplicar por dois visto os endereços de 2 bytes em 2
+	mov   R0, tab_estado    ; Endereço base dos processos do jogo
+    add   R1, R0            ; Agora R0 aponta para a rotina correspondente ao estado actual
+    mov   R0, [R1]          ; Obter o endereço da rotina a chamar
+    call  R0                ; invocar o processo correspondente ao estado
+    jmp   loop_controlo     ; loop
 	
 	
-	
-	
-	
-	
+<<<<<<< HEAD
 ; **********************************************************************
 ; Teclado
 ;   Guarda no [BUFFER] (100H) e em registo a tecla lida
@@ -195,6 +200,27 @@ loop_estados:
 ;   R1(tecla premida guardada no registo), R4(tecla premida guardada na memoria)
 ; 
 ; **********************************************************************
+=======
+; ***********************************************************************
+; * Welcome
+; * Código
+; * Código
+; * Código
+; * 
+; ***********************************************************************
+
+Welcome:
+	mov R0, ecra_inicio
+	call 
+
+; ***********************************************************************
+; * Teclado
+; * Código
+; * Código
+; * Código
+; * R5 R6 R9
+; ***********************************************************************
+>>>>>>> 92023422d3a95c83523589bdce7187231a39ba02
 
 definir_Linha:             ; Redifine a linha quando o shr chegar a 0
 	mov  R1, linha         ; Valor maximo das linhas  
@@ -229,9 +255,9 @@ verificar_Ciclo:
 display_Inativo:           ; Ecra mostra que nao ha tecla premida
 	push R0
 	push R9
-	mov  R0, local_Ecra_Segmentos ; Volta ao endereço 0A000H
+	mov  R0, local_Segmentos ; Volta ao endereço 0A000H
 	mov  R9, 255           ; Corresponde ao valor FF no ecra
-	movb [R0],R9           ; Escreve no local_Ecra_Segmentos
+	movb [R0],R9           ; Escreve no local_Segmentos
 	pop  R9
 	pop  R0
 	mov  R6,0              ; O ciclo do ecra inativo ja foi corrido
@@ -289,7 +315,7 @@ display_Tecla:             ; Mostra que tecla foi premida, no ecra de segmentos
 	push R2
 	mov  R1, adr_Tecla_Valor        ; Endereço de memória com o valor da tecla
 	movb R2,[R1]           ; Obtem valor da tecla
-	mov  R0, local_Ecra_Segmentos   ; Define endereço de escrita display (0A000H)
+	mov  R0, local_Segmentos   ; Define endereço de escrita display (0A000H)
 	movb [R0],R2           ; Escrever no display o valor da tecla
 	pop  R2
 	pop  R1
@@ -298,7 +324,82 @@ display_Tecla:             ; Mostra que tecla foi premida, no ecra de segmentos
 	jmp  scan_Teclado      ; Volta a varrer o teclado
 
 
-; ***********************************************************************
+; **********************************************************************
+; Escreve Ecrã
+;   Rotina que desenha uma tabela de strings no ecrã
+; Entradas
+;   R0 - Tabela de strings a escrever
+;   
+; Saídas
+;   Nenhuma
+; *********************************************************************
+escreve_tabela_ecra:     
+    PUSH  R0                ; Guarda registos
+    PUSH  R1
+    PUSH  R2
+    PUSH  R3
+    MOV   R3, local_Ecra          ; Endereço do ecrã
+    ADD   R3, R1            ; Actualização do endereço onde começar a escrever
+    MOV   R2, MAX_ELE       ; Número de elementos da tabela de strings
+ciclo_ecra:  
+    MOVB  R1, [R0]          ; Elemento actual da tabela de strings
+    MOVB  [R3], R1          ; Escreve o elemento da tabela de strings no ecrã
+    ADD   R0, 1             ; Acede ao índice seguinte da tabela de strings
+    ADD   R3, 1             ; Avança para o byte seguinte do ecrã
+    SUB   R2, 1             ; Actualiza o contador
+    JNZ   ciclo_ecra        ; Volta ao ciclo para escrever o que falta               ; Recupera registos
+    POP   R3
+    POP   R2
+    POP   R1
+    POP   R0
+    RET   
+	
+	
+	
+; **********************************************************************
+; Inverte Ecrã
+;   Inverte o ecrã, diferenciando o estado de suspensão do de jogo
+; Entradas:
+;   Nenhuma
+; Saidas:
+;   Nenhuma
+; **********************************************************************
+inverte_ecra:
+    PUSH  R0               ; Guarda registos
+    PUSH  R1
+    PUSH  R2
+    MOV   R0, local_Ecra   ; Endereço do ecrã
+    MOV   R1, MAX_ECRA     ; Contador de bytes do ecrã
+ciclo_inverte:
+    MOVB  R2, [R0]         ; Obtem o byte actual do ecrã
+    NOT   R2               ; Inverte o conteúdo do byte actual
+    MOVB  [R0], R2         ; Coloca no ecrã o inverso do que estava escrito anteriormente
+    ADD   R0, 1            ; Avança para o byte seguinte
+    SUB   R1, 1            ; Actualiza o contador
+    JNZ   ciclo_inverte    ; Enquanto que o contador for diferente de 0 tem que percorrer o ecrã
+    POP   R2               ; Recupera registos
+    POP   R1
+    POP   R0
+    RET                   ; Termina rotina
+	
+; **********************************************************************
+; Pausa
+;   Rotina que faz uma pausa.
+; Entradas:
+;   R4 - 
+; Saidas:
+;   Nenhuma
+; **********************************************************************
+pausa:
+    PUSH  R0                ; Guarda registos
+    MOV   R0, 5000          ; R0 com um valor grande para fazer uma contagem decrescente, apenas para fazer uma pausa entre rotinas
+ciclo_pausa:
+    SUB   R0, 1             ; Subtrai R0 
+    JNZ   ciclo_pausa       ; Enquanto não for 0 continua a subtrair
+    POP   R0                ; Recupera registos
+    RET
+
+
 
 	
 	
