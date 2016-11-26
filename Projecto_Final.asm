@@ -189,18 +189,6 @@ loop_estados:
     call  R0                ; invocar o processo correspondente ao estado
     jmp   loop_controlo     ; loop
 	
-	
-<<<<<<< HEAD
-; **********************************************************************
-; Teclado
-;   Guarda no [BUFFER] (100H) e em registo a tecla lida
-; Entradas
-;   Nenhuma
-; Saídas 
-;   R1(tecla premida guardada no registo), R4(tecla premida guardada na memoria)
-; 
-; **********************************************************************
-=======
 ; ***********************************************************************
 ; * Welcome
 ; * Código
@@ -211,16 +199,17 @@ loop_estados:
 
 Welcome:
 	mov R0, ecra_inicio
-	call 
-
-; ***********************************************************************
-; * Teclado
-; * Código
-; * Código
-; * Código
-; * R5 R6 R9
-; ***********************************************************************
->>>>>>> 92023422d3a95c83523589bdce7187231a39ba02
+	call
+	
+; **********************************************************************
+; Teclado
+;   Guarda no [BUFFER] (100H) e em registo a tecla lida
+; Entradas
+;   Nenhuma
+; Saídas 
+;   R1(tecla premida guardada no registo), R4(tecla premida guardada na memoria)
+; 
+; **********************************************************************
 
 definir_Linha:             ; Redifine a linha quando o shr chegar a 0
 	mov  R1, linha         ; Valor maximo das linhas  
