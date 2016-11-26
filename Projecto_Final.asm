@@ -97,7 +97,7 @@ STRING 00FFH, 00FFH, 00FFH, 00FFH
 STRING 00FFH, 00FFH, 00FFH, 00FFH
 STRING 00FFH, 00FFH, 00FFH, 00FFH
 
-ecraabout:
+ecra_about:
 STRING 00FFH, 00FFH, 00FFH, 00FFH
 STRING 00FFH, 00FFH, 00FFH, 00FFH
 STRING 00FFH, 00FFH, 00FFH, 00FFH
@@ -186,17 +186,19 @@ loop_estados:
 	
 	
 	
-; ***********************************************************************
-; * Teclado
-; * Código
-; * Código
-; * Código
-; * R5 R6 R9
-; ***********************************************************************
+; **********************************************************************
+; Teclado
+;   Guarda no [BUFFER] (100H) e em registo a tecla lida
+; Entradas
+;   Nenhuma
+; Saídas 
+;   R1(tecla premida guardada no registo), R4(tecla premida guardada na memoria)
+; 
+; **********************************************************************
 
 definir_Linha:             ; Redifine a linha quando o shr chegar a 0
 	mov  R1, linha         ; Valor maximo das linhas  
-	mov  R5,OFF; Redefine se a tecla esta pressionada, para ser voltada a ser verificada
+	mov  R5,OFF            ; Redefine se a tecla esta pressionada, para ser voltada a ser verificada
 
 scan_Teclado:              ; Rotina que lê o teclado 
 	mov  R2, out_Teclado   ; R2 fica com o valor 0C000H(porto de escrita)
