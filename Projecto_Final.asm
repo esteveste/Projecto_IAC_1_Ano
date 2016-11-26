@@ -155,8 +155,8 @@ tab_int:        WORD    int0
 ;PLACE       1500H
 
 tab_estado:
-    WORD  boas_vindas       
-
+    WORD  Welcome       
+	WORD  
 estado_programa:                ; variavel que guarda o estado actual do controlo
     STRING 0H;
 
@@ -168,9 +168,6 @@ PLACE      0
 inicializacao:		       ; Inicializações gerais
 	mov  SP, SP_pilha
 	mov  BTE, tab			;inicializacao BTE
-	mov  R9, 0             ; Contador coluna
-	mov  R5, OFF 		; Vai verificar se a tecla ja foi premida
-	mov  R6, 1             ; Vai verificar se display_Inativo/display_Tecla ja correu, para ser executado 1 unica vez
 
 ; ***********************************************************************
 ; * Estados
@@ -180,12 +177,27 @@ inicializacao:		       ; Inicializações gerais
 ; * R0 R1
 ; ***********************************************************************
 loop_estados:
+	mov R0, estado_programa ; Fazer comentarios diferentes ; Obter o estado actual
+	movb R1, [R0]
+	shl R1,1  ; Multiplicar por dois visto os endereços de 2 bytes em 2
+	mov   R0, tab_estado    ; Endereço base dos processos do jogo
+    add   R1, R0            ; Agora R0 aponta para a rotina correspondente ao estado actual
+    mov   R0, [R1]          ; Obter o endereço da rotina a chamar
+    call  R0                ; invocar o processo correspondente ao estado
+    jmp   loop_controlo     ; loop
 	
 	
+; ***********************************************************************
+; * Welcome
+; * Código
+; * Código
+; * Código
+; * 
+; ***********************************************************************
+
+Welcome:
 	
-	
-	
-	
+
 ; ***********************************************************************
 ; * Teclado
 ; * Código
