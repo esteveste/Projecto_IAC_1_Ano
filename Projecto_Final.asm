@@ -12,9 +12,7 @@
 ; *			 Bernardo Santos, Nº87635
 ; *
 ; ***********************************************************************
-;
-; * Deteção da tecla premida no teclado e registo do seu valor na memória e, posteriormente, no ecrã de segmentos
-; 
+
 ; ***********************************************************************
 ; * Constantes
 ; ***********************************************************************
@@ -27,6 +25,111 @@ in_Teclado		        EQU 0E000H   ; Endereço do porto de leitura do teclado
 OFF         EQU 0        ; Valor da tecla nao premida
 ON          EQU 1        ; Valor da tecla premida
 
+; ***********************************************************************
+; * Ecras
+; ***********************************************************************
+PLACE       1500H
+ecra_inicio:
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00C1H, 0008H, 0021H, 0042H
+STRING 00F7H, 007EH, 00EDH, 00BFH
+STRING 00F7H, 000EH, 00E3H, 0067H
+STRING 00F7H, 007EH, 00EBH, 007BH
+STRING 00F7H, 000EH, 00EDH, 0043H
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 0092H, 0049H, 0092H, 0049H
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00ADH, 0051H, 0031H, 0031H
+STRING 00ADH, 0055H, 0057H, 0057H
+STRING 00A5H, 0055H, 0057H, 0057H
+STRING 00A5H, 0051H, 0051H, 003BH
+STRING 00A9H, 0055H, 0051H, 005DH
+STRING 00A9H, 00B5H, 0057H, 005DH
+STRING 00ADH, 00B5H, 0031H, 0051H
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00C4H, 0044H, 0045H, 00C7H
+STRING 00C5H, 004CH, 00CFH, 00DFH
+STRING 00DCH, 00DFH, 0077H, 00DFH
+STRING 00DDH, 0044H, 0045H, 00C7H
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+
+ecra_fim:
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00C0H, 0081H, 0099H, 0003H
+STRING 00C0H, 0081H, 0099H, 0003H
+STRING 00C7H, 0099H, 0081H, 003FH
+STRING 00C7H, 0099H, 0081H, 003FH
+STRING 00C7H, 0099H, 0081H, 003FH
+STRING 00C7H, 0099H, 0081H, 0003H
+STRING 00C7H, 0099H, 0081H, 0003H
+STRING 00C7H, 0099H, 0081H, 0003H
+STRING 00C8H, 0081H, 0081H, 0003H
+STRING 00C8H, 0081H, 0081H, 003FH
+STRING 00CCH, 0099H, 0099H, 003FH
+STRING 00CCH, 0099H, 0099H, 003FH
+STRING 00CCH, 0099H, 0099H, 003FH
+STRING 00C0H, 0099H, 0099H, 0003H
+STRING 00C0H, 0099H, 0099H, 0003H
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00C0H, 0099H, 0002H, 0007H
+STRING 00C0H, 0099H, 0002H, 0077H
+STRING 00CCH, 0099H, 003EH, 0077H
+STRING 00CCH, 0099H, 0002H, 0077H
+STRING 00CCH, 0099H, 0002H, 0007H
+STRING 00CCH, 00DBH, 0002H, 001FH
+STRING 00CCH, 00DBH, 003EH, 004FH
+STRING 00C0H, 00C3H, 0002H, 0067H
+STRING 00C0H, 00E7H, 0002H, 0067H
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+
+ecraabout:
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00DDH, 0013H, 0019H, 00AFH
+STRING 00C9H, 0055H, 007AH, 00ABH
+STRING 00D5H, 0055H, 0018H, 00DFH
+STRING 00DDH, 0015H, 007AH, 00DBH
+STRING 00DDH, 0053H, 0019H, 00DFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00C4H, 0044H, 0054H, 0047H
+STRING 00CCH, 00ECH, 00D4H, 00CFH
+STRING 00DFH, 006DH, 00D5H, 00F7H
+STRING 00C4H, 006CH, 006CH, 0047H
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00CEH, 00DAH, 008BH, 00DFH
+STRING 00D5H, 004AH, 009BH, 00AFH
+STRING 00D4H, 0052H, 00BBH, 008FH
+STRING 00CDH, 005AH, 0088H, 00AFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00C6H, 00DAH, 0022H, 003FH
+STRING 00CDH, 004BH, 006AH, 007FH
+STRING 00F4H, 0053H, 006BH, 00BFH
+STRING 00C5H, 005BH, 0062H, 003FH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 00FFH
 
 
 ; ***********************************************************************
@@ -35,8 +138,27 @@ ON          EQU 1        ; Valor da tecla premida
 PLACE 1000H
 pilha:
 	table 100H               ; Tabela para stack pointer
-fim_Pilha:					 ; Etiqueta com o endereço final da pilha
+SP_pilha:					 ; Etiqueta com o endereço final da pilha
 
+; *********************************************************************************
+; * Tabela de Interrupções
+; *********************************************************************************
+
+; Tabela de vectores de interrupção
+tab_int:        WORD    int0
+				WORD    int1
+
+; *********************************************************************************
+; * Tabela de endereços de estados do loop de controlo
+; *********************************************************************************
+
+;PLACE       1500H
+
+tab_estado:
+    WORD  boas_vindas       
+
+estado_programa:                ; variavel que guarda o estado actual do controlo
+    STRING 0H;
 
 ; ***********************************************************************
 ; * Código
@@ -44,11 +166,33 @@ fim_Pilha:					 ; Etiqueta com o endereço final da pilha
 
 PLACE      0
 inicializacao:		       ; Inicializações gerais
-    
+	mov  SP, SP_pilha
+	mov  BTE, tab			;inicializacao BTE
 	mov  R9, 0             ; Contador coluna
 	mov  R5, OFF 		; Vai verificar se a tecla ja foi premida
 	mov  R6, 1             ; Vai verificar se display_Inativo/display_Tecla ja correu, para ser executado 1 unica vez
-	mov  sp, fim_Pilha
+
+; ***********************************************************************
+; * Estados
+; * Código
+; * Código
+; * Código
+; * R0 R1
+; ***********************************************************************
+loop_estados:
+	
+	
+	
+	
+	
+	
+; ***********************************************************************
+; * Teclado
+; * Código
+; * Código
+; * Código
+; * R5 R6 R9
+; ***********************************************************************
 
 definir_Linha:             ; Redifine a linha quando o shr chegar a 0
 	mov  R1, linha         ; Valor maximo das linhas  
