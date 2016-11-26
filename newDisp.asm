@@ -221,7 +221,7 @@ ciclo_ecra:
     POP   R0
     RET   
 	
-	; **********************************************************************
+; **********************************************************************
 ; Inverte Ecrã
 ;   Inverte o ecrã, diferenciando o estado de suspensão do de jogo
 ; Entradas:
