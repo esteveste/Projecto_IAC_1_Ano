@@ -24,6 +24,7 @@ out_Teclado	            EQU 0C000H   ; Endereço do porto de escrita do teclado
 in_Teclado		        EQU 0E000H   ; Endereço do porto de leitura do teclado
 MAX_ECRA   EQU 128H      ; Número de bytes do ecrã
 MAX_ELE 	EQU 128
+Tecla_Jogo EQU 12H
 local_Ecra	EQU 8000H
 OFF         EQU 0        ; Valor da tecla nao premida
 ON          EQU 1        ; Valor da tecla premida
@@ -159,7 +160,10 @@ tab_int:        WORD    int0
 
 tab_estado:
     WORD  Welcome       
-	WORD  
+	WORD  Jogo
+	Word Pausa ;REVER VALORES
+	Word Terminar
+	Word About
 estado_programa:                ; variavel que guarda o estado actual do controlo
     STRING 0H;
 
@@ -198,8 +202,23 @@ loop_estados:
 ; ***********************************************************************
 
 Welcome:
+	Push R0
+	Push R1
+	Push R2
 	mov R0, ecra_inicio
-	call
+	call escreve_tabela_ecra
+esperar_tecla:
+	call teclado(FAZER MAIS TARDE)
+	mov R0, adr_Tecla_Valor
+	mov R2,[R0]
+	CMP R2, Tecla_Jogo ; tecla c
+	JNZ esperar_tecla
+	mov R0, estado_programa ; Fazer comentarios diferentes ; Obter o estado actual adrress
+	mov [R0], 1H ; depois fazer EQU para o modo Jogo
+	pop R2
+	pop R1
+	pop R0
+	ret
 	
 ; **********************************************************************
 ; Teclado
