@@ -1,0 +1,115 @@
+ecra_linha:
+STRING 0000H, 0000H, 0010H, 0000H
+
+tetraminos:
+	tetraminoI:
+		tetraminoI1:
+			STRING 1, 0, 0, 0
+			STRING 1, 0, 0, 0
+			STRING 1, 0, 0, 0
+			STRING 1, 0, 0, 0
+		
+		tetraminoI2:
+			STRING 1, 1, 1, 1
+			STRING 0, 0, 0, 0
+			STRING 0, 0, 0, 0
+			STRING 0, 0, 0, 0
+			
+		tetraminoI3:
+			STRING 1, 0, 0, 0
+			STRING 1, 0, 0, 0
+			STRING 1, 0, 0, 0
+			STRING 1, 0, 0, 0
+		
+		tetraminoI4:
+			STRING 1, 1, 1, 1
+			STRING 0, 0, 0, 0
+			STRING 0, 0, 0, 0
+			STRING 0, 0, 0, 0
+	
+	tetraminoL:
+		tetraminoL1:
+			STRING 1, 0, 0, 0
+			STRING 1, 0, 0, 0
+			STRING 1, 1, 0, 0
+			STRING 0, 0, 0, 0
+			
+		tetraminoL2:
+			STRING 1, 1, 1, 0
+			STRING 1, 0, 0, 0
+			STRING 0, 0, 0, 0
+			STRING 0, 0, 0, 0
+			
+		tetraminoL3:
+			STRING 1, 1, 0, 0
+			STRING 0, 1, 0, 0
+			STRING 0, 1, 0, 0
+			STRING 0, 0, 0, 0
+			
+		tetraminoL4:
+			STRING 0, 0, 1, 0
+			STRING 1, 1, 1, 0
+			STRING 0, 0, 0, 0
+			STRING 0, 0, 0, 0
+		
+	tetraminoS:
+		tetraminoS1:
+			STRING 0, 1, 1, 0
+			STRING 1, 1, 0, 0
+			STRING 0, 0, 0, 0
+			STRING 0, 0, 0, 0
+		
+		tetraminoS2:
+			STRING 1, 0, 0, 0
+			STRING 1, 1, 0, 0
+			STRING 0, 1, 0, 0
+			STRING 0, 0, 0, 0
+			
+		tetraminoS3:
+			STRING 1, 1, 0, 0
+			STRING 0, 1, 1, 0
+			STRING 0, 0, 0, 0
+			STRING 0, 0, 0, 0
+			
+		tetraminoS4:
+			STRING 0, 1, 0, 0
+			STRING 1, 1, 0, 0
+			STRING 1, 0, 0, 0
+			STRING 0, 0, 0, 0
+			
+	tetraminoT:
+		tetraminoT1:
+			STRING 1, 1, 1, 0
+			STRING 0, 1, 0, 0
+			STRING 0, 0, 0, 0
+			STRING 0, 0, 0, 0
+			
+		tetraminoT2:
+			STRING 0, 1, 0, 0
+			STRING 1, 1, 0, 0
+			STRING 0, 1, 0, 0
+			STRING 0, 0, 0, 0
+		
+		tetraminoT3:
+			STRING 0, 1, 0, 0
+			STRING 1, 1, 1, 0
+			STRING 0, 0, 0, 0
+			STRING 0, 0, 0, 0
+			
+		tetraminoT4:
+			STRING 1, 0, 0, 0
+			STRING 1, 1, 0, 0
+			STRING 1, 0, 0, 0
+			STRING 0, 0, 0, 0
+			
+	tetraminoQ:
+		STRING 1, 1, 0, 0
+		STRING 1, 1, 0, 0
+		STRING 0, 0, 0, 0
+		STRING 0, 0, 0, 0
+
+monstro:
+	STRING 1, 0, 1, 0
+	STRING 0, 1, 0, 0
+	STRING 1, 0, 1, 0
+	STRING 0, 0, 0, 0
