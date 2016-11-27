@@ -358,8 +358,8 @@ ciclo_ecra:
     ADD   R0, 1             ; Acede ao índice seguinte da tabela de strings
     ADD   R3, 1             ; Avança para o byte seguinte do ecrã
     SUB   R2, 1             ; Actualiza o contador
-    JNZ   ciclo_ecra        ; Volta ao ciclo para escrever o que falta               ; Recupera registos
-    POP   R3
+    JNZ   ciclo_ecra        ; Volta ao ciclo para escrever o que falta
+    POP   R3                ; Recupera registos
     POP   R2
     POP   R1
     POP   R0
