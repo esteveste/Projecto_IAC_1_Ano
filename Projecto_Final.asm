@@ -164,7 +164,7 @@ SP_pilha:					 ; Etiqueta com o endereço final da pilha
 tab_estado:
     WORD  Welcome       
 	WORD  Jogo
-	Word Pausa ;REVER VALORES
+	Word Suspender 
 	Word Gameover
 	Word About
 estado_programa:                ; variavel que guarda o estado actual do controlo
@@ -227,20 +227,20 @@ esperar_tecla:
 	pop R0
 	ret
 ; *********************************************************************************
-; * Rotina Pausa
+; * Rotina Suspender
 ; * 
 ; *********************************************************************************
 	
-Pausa:
+Suspender:
     PUSH R1 ; Guarda R1
     PUSH R2 ; Guarda R2
     DI    ; Desliga as interrupcoes
     CALL inverte_ecra ; Chama a rotina de inverter o ecra para diferenciar do estado normal de jogo
-ciclo_pausa:
+ciclo_suspender:
     CALL  teclado ; Chama a rotina do teclado e devolve em R1 a tecla pressionada
     MOV   R2, tecla_pausa ; Atualiza R2 com o valor da tecla de suspender
     CMP   R1, R2 ; Verifica se a tecla pressionada e a tecla de suspender
-    JNZ   ciclo_pausa ; Caso nao seja a tecla de suspender, repete ate receber a tecla de suspender para tirar do modo de pausa
+    JNZ   ciclo_suspender ; Caso nao seja a tecla de suspender, repete ate receber a tecla de suspender para tirar do modo de pausa
     MOV   R2, 2 ; Atualiza R2 com o novo estado (estado jogar)
     MOV   R1, estado_programa
     MOVB  [R1], R2 ; Atualiza o estado_programa com o novo estado
@@ -262,7 +262,7 @@ About:
 	PUSH R1 ; Guarda R1
 	PUSH R2 ; Guarda R2
 	MOV R0, ecra_about ; Guarda em R0 a tabela de strings ecra_about
-	CALL ecra_escreve ; Chama a rotina para escrever no ecra a tabela de strings ecra_about
+	CALL escreve_tabela_ecra ; Chama a rotina para escrever no ecra a tabela de strings ecra_about
 about_loop:
 	CALL esperar_tecla ; Chama a rotina que devolve o valor de uma tecla premida
 	MOV R2, tecla_terminar ; Atualiza R2 com o valor da tecla terminar
