@@ -60,9 +60,9 @@ STRING 00FFH, 00FFH, 00FFH, 00FFH
 STRING 00FFH, 00FFH, 00FFH, 00FFH
 STRING 00FFH, 00FFH, 00FFH, 00FFH
 STRING 00FFH, 00FFH, 00FFH, 00FFH
-STRING 00C4H, 0044H, 0045H, 00C7H
+STRING 00C4H, 0044H, 0045H, 00DFH
 STRING 00C5H, 004CH, 00CFH, 00DFH
-STRING 00DCH, 00DFH, 0077H, 00DFH
+STRING 00DCH, 00DFH, 0077H, 00C7H
 STRING 00DDH, 0044H, 0045H, 00C7H
 STRING 00FFH, 00FFH, 00FFH, 00FFH
 STRING 00FFH, 00FFH, 00FFH, 00FFH
@@ -164,13 +164,8 @@ tab_int:        WORD    int0
 tab_estado:
     WORD  Welcome       
 	WORD  Jogo
-<<<<<<< HEAD
 	Word Suspender 
 	Word Gameover
-=======
-	Word Pausa ;REVER VALORES
-	Word Terminar
->>>>>>> e41f6136af6c6048feeaa7fe26370706f85e767f
 	Word About
 estado_programa:                ; variavel que guarda o estado actual do controlo
     STRING 0H;
@@ -227,7 +222,7 @@ esperar_tecla:
 	pop R1
 	pop R0
 	ret
-<<<<<<< HEAD
+
 ; *********************************************************************************
 ; * Rotina Suspender
 ; * 
@@ -324,9 +319,7 @@ sair_gameover:
 ;####Jogo
 Jogo:
 	jmp Jogo
-=======
-	
->>>>>>> e41f6136af6c6048feeaa7fe26370706f85e767f
+
 ; **********************************************************************
 ; Teclado
 ;   Guarda no [BUFFER] (100H) e em registo a tecla lida
