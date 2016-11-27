@@ -17,14 +17,14 @@
 ; * Constantes
 ; ***********************************************************************
 
-adr_Tecla_Valor         EQU 100H	 ; Endereço de memória onde se guarda a tecla premida 	
+adr_Tecla_Valor         EQU 1400H	 ; Endereço de memória onde se guarda a tecla premida 	
 linha	                EQU 8H       ; Posição do bit correspondente à linha a testar
 local_Segmentos	EQU 0A000H 	 ; Endereco do display de 7 segmentos
 out_Teclado	            EQU 0C000H   ; Endereço do porto de escrita do teclado
 in_Teclado		        EQU 0E000H   ; Endereço do porto de leitura do teclado
 MAX_ECRA   EQU 128H      ; Número de bytes do ecrã
 MAX_ELE 	EQU 128
-tecla_suspender EQU 0CH
+tecla_pausa EQU 0CH
 tecla_about EQU 0AH
 tecla_terminar EQU 0EH
 tecla_jogar EQU 0BH
@@ -152,8 +152,8 @@ SP_pilha:					 ; Etiqueta com o endereço final da pilha
 ; *********************************************************************************
 
 ; Tabela de vectores de interrupção
-tab_int:        WORD    int0
-				WORD    int1
+;tab_int:        WORD    int0
+;				WORD    int1
 
 ; *********************************************************************************
 ; * Tabela de endereços de estados do loop de controlo
@@ -168,7 +168,7 @@ tab_estado:
 	Word Gameover
 	Word About
 estado_programa:                ; variavel que guarda o estado actual do controlo
-    STRING 0H;
+    STRING 0H; ;;SEMMPREEE MOVB
 
 ; ***********************************************************************
 ; * Código
@@ -177,7 +177,7 @@ estado_programa:                ; variavel que guarda o estado actual do control
 PLACE      0
 inicializacao:		       ; Inicializações gerais
 	mov  SP, SP_pilha
-	mov  BTE, tab			;inicializacao BTE
+;	mov  BTE, tab			;inicializacao BTE
 
 ; ***********************************************************************
 ; * Estados
@@ -194,7 +194,7 @@ loop_estados:
     add   R1, R0            ; Agora R0 aponta para a rotina correspondente ao estado actual
     mov   R0, [R1]          ; Obter o endereço da rotina a chamar
     call  R0                ; invocar o processo correspondente ao estado
-    jmp   loop_controlo     ; loop
+    jmp   loop_estados     ; loop
 	
 ; ***********************************************************************
 ; * Welcome
@@ -208,21 +208,24 @@ Welcome:
 	Push R0
 	Push R1
 	Push R2
+	Push R3
 	mov R0, ecra_inicio
 	call escreve_tabela_ecra
 esperar_tecla:
-	call teclado(FAZER MAIS TARDE)
+	call teclado ;(FAZER MAIS TARDE)
 	mov R0, adr_Tecla_Valor
-	mov R2,[R0]
-	CMP R2, Tecla_Jogo ; tecla c
+	movb R2,[R0]
+	mov R3, tecla_jogar
+	CMP R2, R3 ; tecla c
 	JNZ esperar_tecla
 	mov R0, estado_programa ; Fazer comentarios diferentes ; Obter o estado actual adrress
-	mov [R0], 1H ; depois fazer EQU para o modo Jogo
+	mov R1, 1  ; depois fazer EQU para o modo Jogo
+	movb [R0], R1
+	pop R3
 	pop R2
 	pop R1
 	pop R0
 	ret
-
 ; *********************************************************************************
 ; * Rotina Suspender
 ; * 
@@ -319,20 +322,32 @@ sair_gameover:
 ;####Jogo
 Jogo:
 	jmp Jogo
-
 ; **********************************************************************
 ; Teclado
-;   Guarda no [BUFFER] (100H) e em registo a tecla lida
+;   Verifica se alguma tecla foi premida e guarda o valor na memória
 ; Entradas
 ;   Nenhuma
 ; Saídas 
-;   R1(tecla premida guardada no registo), R4(tecla premida guardada na memoria)
+;   Guarda na memória (100H) o valor da tecla
 ; 
 ; **********************************************************************
-
+teclado:
+	push r1
+	push r2
+	push r3
+	push r4
+	push R5
+	push R6
+	call definir_Linha
+	pop r6
+	pop r5
+	pop r4
+	pop r3
+	pop r2
+	pop r1
 definir_Linha:             ; Redifine a linha quando o shr chegar a 0
 	mov  R1, linha         ; Valor maximo das linhas  
-	mov  R5,OFF            ; Redefine se a tecla esta pressionada, para ser voltada a ser verificada
+	;mov  R5,OFF            ; Redefine se a tecla esta pressionada, para ser voltada a ser verificada
 
 scan_Teclado:              ; Rotina que lê o teclado 
 	mov  R2, out_Teclado   ; R2 fica com o valor 0C000H(porto de escrita)
@@ -345,20 +360,54 @@ scan_Teclado:              ; Rotina que lê o teclado
 	
 mudar_Linha:
 	shr  R1,1			   ; Vai alterando a linha a varrer
-	jz   estado_Tecla      ; Verificar estado da tecla apos varrimento das 4 linhas
+	jz   definir_Linha      ; @@@@@@MALLL DESCRICAO Verificar estado da tecla apos varrimento das 4 linhas
 	jmp  scan_Teclado      ; Caso ainda não acabou o varrimento de todas as linhas, fazer scan linha seguite
 	
-estado_Tecla:              ; Verifica se alguma tecla foi clicada durante o varrimento
-	and  R5,R5			   ; Afeta as flags
-	jz   verificar_Ciclo   ; Se tecla nao premida 
-	mov  R6,1              ; Se uma tecla foi clicada, define um valor que representa q o display_Inativo ainda não correu
-	jmp  definir_Linha
+;estado_Tecla:              ; Verifica se alguma tecla foi clicada durante o varrimento
+;	and  R5,R5			   ; Afeta as flags
+;	jz   verificar_Ciclo   ; Se tecla nao premida 
+;	mov  R6,1              ; Se uma tecla foi clicada, define um valor que representa q o display_Inativo ainda não correu
+;	jmp  definir_Linha
 	
-verificar_Ciclo:
-	and  R6,R6             ; Verifica se o display_Inativo já correu
-	jnz  display_Inativo   ; Vai mostrar que nenhuma tecla desta linha foi premida
-	mov  R5, OFF
-	jmp  definir_Linha     ; Verificar se a tecla premida esta na proxima linha
+;verificar_Ciclo:
+;	and  R6,R6             ; Verifica se o display_Inativo já correu
+;	jnz  display_Inativo   ; Vai mostrar que nenhuma tecla desta linha foi premida
+;	mov  R5, OFF
+;	jmp  definir_Linha     ; Verificar se a tecla premida esta na proxima linha
+
+tecla_Pressionada:         ; Verifica qual a tecla premida
+	mov r5, 0 ;Redifinir contadores
+	mov r6, 0 
+	call linha_Count
+	call coluna_Count
+	call transform_Hex
+	call gravar_Mem_Teclado
+	ret
+linha_Count:               ; Ciclo que conta o nº de linhas
+	add  R5,1			   
+	shr  R1,1			   ; Conta o nº de shift ate dar 0
+	jnz  linha_Count
+	sub  R5,1 			   ; Fazer o contador comecar em 0
+	ret		               ; Vai para coluna_Count
+
+coluna_Count:              ; Ciclo que conta o nº de colunas
+	add  R6,1 			   
+	shr  R3,1			   ; Conta o nº de shift ate dar 0
+	jnz  coluna_Count
+	sub  R6,1 			   ; Fazer o contador comecar em 0
+	ret
+
+transform_Hex:             ; Vai transformar o numero de colunas e linhas no valor do teclado
+	shl  R5,2 			   ; Multiplica por 4,valor a somar a linha
+	add  R6,R5			   ; Valor da tecla em R6
+	ret
+
+gravar_Mem_Teclado:
+    mov  R4, adr_Tecla_Valor        
+	movb [R4], R6      	   ; Guarda tecla premida na memória de endereço 100H
+	ret
+
+;###########################################################	
 	
 display_Inativo:           ; Ecra mostra que nao ha tecla premida
 	push R0
@@ -371,51 +420,6 @@ display_Inativo:           ; Ecra mostra que nao ha tecla premida
 	mov  R6,0              ; O ciclo do ecra inativo ja foi corrido
 	mov  R5,OFF; Sem tecla premida
 	jmp  definir_Linha
-	
-tecla_Pressionada:         ; Verifica qual a tecla premida
-	push R1
-	push R3
-	push R4
-	push R9
-	push R10
-	call linha_Count
-	call coluna_Count
-	call transform_Hex
-	call gravar_Mem_Teclado
-	pop  R10
-	pop  R9               
-	pop  R4
-	pop  R3
-	pop  R1
-	mov  R5, 1             ; Tecla esta pressionada
-	and  R6,R6 			   
-	jz   display_Tecla     ; Se este ciclo ainda nao foi corrido
-	mov  R9,0              ; Redefinir o valor da tecla
-	jmp  scan_Teclado
-	
-linha_Count:               ; Ciclo que conta o nº de linhas
-	add  R10,1			   
-	shr  R1,1			   ; Conta o nº de shift ate dar 0
-	jnz  linha_Count
-	sub  R10,1 			   ; Fazer o contador comecar em 0
-	ret		               ; Vai para coluna_Count
-
-coluna_Count:              ; Ciclo que conta o nº de colunas
-	add  R9,1 			   
-	shr  R3,1			   ; Conta o nº de shift ate dar 0
-	jnz  coluna_Count
-	sub  R9,1 			   ; Fazer o contador comecar em 0
-	ret
-
-transform_Hex:             ; Vai transformar o numero de colunas e linhas no valor do teclado
-	shl  R10,2 			   ; Multiplica por 4,valor a somar a linha
-	add  R9,R10			   ; Valor da tecla em R9
-	ret
-
-gravar_Mem_Teclado:
-    mov  R4, adr_Tecla_Valor        
-	movb [R4], R9      	   ; Guarda tecla premida na memória de endereço 100H
-	ret
 	
 display_Tecla:             ; Mostra que tecla foi premida, no ecra de segmentos
 	push R0
@@ -431,7 +435,7 @@ display_Tecla:             ; Mostra que tecla foi premida, no ecra de segmentos
 	mov  R6,1			   ; Define um valor que representa que a tecla ja foi representada no ecra
 	jmp  scan_Teclado      ; Volta a varrer o teclado
 
-
+;############################################################
 ; **********************************************************************
 ; Escreve Ecrã
 ;   Rotina que desenha uma tabela de strings no ecrã
