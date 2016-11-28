@@ -34,12 +34,14 @@ tecla_jogar EQU 0BH
 local_Ecra	EQU 8000H
 OFF         EQU 0        ; Valor da tecla nao premida
 ON          EQU 1        ; Valor da tecla premida
-estado_welcome EQU 1 
-estado_start EQU 2
-estado_jogo EQU 3
+estado_Welcome EQU 1 
+estado_Preparar_jogo EQU 2
+estado_Jogo EQU 3
 estado_Suspender EQU 4
 estado_Gameover EQU 5
 estado_About EQU 6
+mascara_0_1bits EQU 3H
+mascara_2_3bits EQU CH
 ; ***********************************************************************
 ; * Ecras
 ; ***********************************************************************
@@ -355,6 +357,13 @@ Preparar_jogo:
 Jogo:
 	mov R1, adr_Nr_random
 	mov R0, [R1] ;Nr aleatorio
+	mov R1, mascara_0_1bits
+	and R0, R1 ;;isola os ultimos 2 bits
+	;Escolher teramino
+	
+	
+	
+	
 	
 ; **********************************************************************
 ; Teclado
