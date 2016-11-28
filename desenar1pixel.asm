@@ -7,11 +7,6 @@
 ; *  R3 - Coluna onde escrever
 ; *Saídas:
 ; *  Nenhuma
-; *COMENTARIO
-; * Em termos logicos o que isto faz seria, receber o valor a escrever, a linha e coluna
-; * e depois sabendo que o bit a escrever seria 4*linha + coluna/8, ele descobre onde escrever
-; * e cria uma mascara baseado no 80H para poder escrever em qualquer bit de um byte
-; * e depois escreve no ecra sem apagar o que ja esta escrito nesse byte 
 ; **********************************************************************
 
 desenhar_pixel:
