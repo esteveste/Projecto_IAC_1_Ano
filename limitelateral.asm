@@ -7,24 +7,17 @@ ecra_linhalateral:
 	PUSH R1
 	PUSH R2
 	PUSH R3
-	PUSH R4
-	MOV R0, local_Ecra ; R0 com o endereco do ecra
-	MOV R2, 128 ; Numero de bytes totais do ecra
-repor_elementos:
-	MOV R1, ecra_linha ; R1 com a tabela de strings que cria a linha lateral
-	MOV R3, 4 ; Numero de elementos da tabela de strings (0, 1, 2, 3)
-escrever_linhalateral:
-	MOVB R4, [R1]
-	MOVB [R0], R4 ; Move o valor da tabela de strings para o ecra
-	ADD R0, 1 ; Acede ao byte seguinte do ecra
-	ADD R1, 1 ; Acede ao proximo elemento da tabela de strings
-	SUB R2, 1 ; Atualiza o contador de bytes do ecra
-	JZ fim_linhalateral ; Se ja tiver pintado todas as linhas acaba
-	SUB R3, 1 ; Atualiza o contador de elementos da tabela de strings
-	JZ repor_elementos ; Caso ja tenha percorrido todos os elementos repoe o contador
-	JMP escrever_linhalateral ; Corre o loop ate  o ecra estar todo pintada
+	MOV R0, 32 ; R0 com um contador para ver se todas as linhas estao pintadas
+	MOV R1, 1 ; Valor a escrever
+	MOV R2, 0 ; Linha inicial onde comecar a pintada
+loop_desenharlinha:
+	MOV R3, 12 ; Coluna fixa onde escrever o limite lateral
+	CALL desenhar_pixel ; Rotina que desenha 1 pixel
+	SUB R0, 1 ; Atualiza o contador de linhas
+	JZ fim_linhalateral ; Se ja desenhou todas as linhas acaba
+	ADD R2, 1
+	JMP loop_desenharlinha ; Corre o loop outra vez ate todas as linhas estarem pintadas
 fim_linhalateral:
-	POP R4
 	POP R3 ; Devolve Registos
 	POP R2
 	POP R1
