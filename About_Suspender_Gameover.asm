@@ -6,8 +6,8 @@
 suspender:
     PUSH R1 ; Guarda R1
     PUSH R2 ; Guarda R2
-	DI1 ; Desliga as interrupcoes
-    DI0
+	;DI1 ; Desliga as interrupcoes
+    ;DI0
     DI
     CALL inverte_ecra ; Chama a rotina de inverter o ecra para diferenciar do estado normal de jogo
 ciclo_suspender:
@@ -15,11 +15,11 @@ ciclo_suspender:
     MOV   R2, tecla_suspender ; Atualiza R2 com o valor da tecla de suspender
     CMP   R1, R2 ; Verifica se a tecla pressionada e a tecla de suspender
     JNZ   ciclo_suspender ; Caso nao seja a tecla de suspender, repete ate receber a tecla de suspender para tirar do modo de pausa
-    MOV   R2, 2 ; Atualiza R2 com o novo estado (estado jogar)
+    MOV   R2, 3 ; Atualiza R2 com o novo estado (estado jogar)
     MOV   R1, estado_ctrl
     MOVB  [R1], R2 ; Atualiza o estado_programa com o novo estado
-	EI1 ; Liga as interrupcoes
-    EI0
+	;EI1 ; Liga as interrupcoes
+    ;EI0
     EI
     CALL inverte_ecra
     POP R2 ; Devolve R2
@@ -42,13 +42,13 @@ about_loop:
 	MOV R2, tecla_terminar ; Atualiza R2 com o valor da tecla terminar
 	CMP R1, R2 ; Verifica se a tecla e' a tecla de terminar
 	JNZ verif_jogar ; Se nao for verifica se e a de jogar
-	MOV R2, 4 ; Atualiza R2 com o valor do novo estado (estado terminar)
+	MOV R2, 5 ; Atualiza R2 com o valor do novo estado (estado terminar)
 	JMP terminar ; Termina caso seja a tecla terminar
 verif_jogar:
 	MOV R2, tecla_jogar ; Atualiza R2 com o valor da tecla jogar
 	CMP R1, R2 ; Verifica se a tecla e' a tecla de jogar
 	JNZ about_loop ; Se nao for corre o loop outra vez
-	MOV R2, 2 ; Atualiza R2 com o valor do novo estado (estado jogar)
+	MOV R2, 3 ; Atualiza R2 com o valor do novo estado (estado jogar)
 	MOV R1, estado_programa ; Atualiza R1 com o endereco do estado programa
 	MOV [R1], R2 ; Atualiza o estado programa com o valor do estado atual (estado jogar)
 	JMP sair_about
@@ -81,7 +81,7 @@ gameover_loop:
 	MOV R2, tecla_jogar ; Atualiza R2 com o valor da tecla jogar
 	CMP R1, R2 ; Verifica se a tecla e' a de jogar
 	JNZ verif_about ; Se nao for verifica se e' a de about
-	MOV R2, 2 ; Atualiza R2 com o estado novo (estado jogar)
+	MOV R2, 3 ; Atualiza R2 com o estado novo (estado jogar)
 	MOV R1, estado_programa ; Atualiza R1 com o endereco do estado programa
 	MOV [R1], R2 ; Atualiza o estado programa com o valor do estado atual (estado jogar)
 	JMP sair_gameover
@@ -89,7 +89,7 @@ verif_about:
 	MOV R2, tecla_about ; Atualiza R2 com o valor da tecla about
 	CMP R1, R2 ; Verifica se e' a tecla about
 	JNZ gameover_loop ; Volta a correr o loop gameover
-	MOV R2, 5 ; Atualiza R2 com o estado novo (estado about)
+	MOV R2, 6 ; Atualiza R2 com o estado novo (estado about)
 	MOV R1, estado_programa ; Atualiza R1 com o endereco do estado programa
 	MOV [R1], R2 ; Atualiza o estado programa com o valor do estado atual (estado about)
 sair_gameover:

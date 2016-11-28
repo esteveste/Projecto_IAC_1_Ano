@@ -16,6 +16,7 @@ mover_direita:
 	PUSH R3
 	PUSH R4
 	PUSH R5
+	PUSH R6
 	MOV R6, adr_x ; Atualiza R0 com o valor correspondente a linha atual onde desenhar o tetramino
 	MOVB R2, [R6] ; Mete em R2, o valor da linha onde comecar a desenhar
 	MOV R6, adr_y ; Acede a tabela que contem as posicoes 
@@ -30,8 +31,6 @@ mover_direita:
 	CALL apagar
 	CALL desenhar_tetra
 fim_mover_direita:
-	POP R8
-	POP R7
 	POP R6
 	POP R5
 	POP R4
@@ -59,6 +58,7 @@ mover_esquerda:
 	PUSH R3
 	PUSH R4
 	PUSH R5
+	PUSH R6
 	MOV R6, adr_x ; Atualiza R0 com o valor correspondente a linha atual onde desenhar o tetramino
 	MOVB R2, [R6] ; Mete em R2, o valor da linha onde comecar a desenhar
 	MOV R6, adr_y ; Acede a tabela que contem as posicoes 
@@ -73,8 +73,6 @@ mover_esquerda:
 	CALL apagar
 	CALL desenhar_tetra
 fim_mover_esquerda:
-	POP R8
-	POP R7
 	POP R6
 	POP R5
 	POP R4

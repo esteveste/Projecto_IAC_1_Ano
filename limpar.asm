@@ -8,7 +8,7 @@ limpar:
 	PUSH R2 ; Guarda R2
 	MOV R0, local_Ecra ; R0 com o endereco do Ecra
 	MOV R1, 128 ; Valor de bytes totais do ecra
-	MOV R2, 00H ; Valor que permite limpar todos os bytes do ecra
+	MOV R2, 0000H ; Valor que permite limpar todos os bytes do ecra
 loop_limpar:
 	MOV [R0], R2 ; Limpa 1 byte do ecra
 	ADD R0, 1 ; Acede ao byte seguinte do ecra
