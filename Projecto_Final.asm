@@ -19,6 +19,8 @@
 
 adr_Tecla_Valor         EQU 1400H	 ; Endereço de memória onde se guarda a tecla premida
 adr_Nr_random 			EQU 1410H
+adr_x					EQU 1420H
+adr_y					EQU 1430H
 linha	                EQU 8H       ; Posição do bit correspondente à linha a testar
 local_Segmentos	EQU 0A000H 	 ; Endereco do display de 7 segmentos
 out_Teclado	            EQU 0C000H   ; Endereço do porto de escrita do teclado
