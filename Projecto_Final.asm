@@ -17,7 +17,8 @@
 ; * Constantes
 ; ***********************************************************************
 
-adr_Tecla_Valor         EQU 1400H	 ; Endereço de memória onde se guarda a tecla premida 	
+adr_Tecla_Valor         EQU 1400H	 ; Endereço de memória onde se guarda a tecla premida
+adr_Nr_random 			EQU 1410H
 linha	                EQU 8H       ; Posição do bit correspondente à linha a testar
 local_Segmentos	EQU 0A000H 	 ; Endereco do display de 7 segmentos
 out_Teclado	            EQU 0C000H   ; Endereço do porto de escrita do teclado
@@ -39,8 +40,8 @@ PLACE       1500H
 ecra_inicio:
 STRING 00FFH, 00FFH, 00FFH, 00FFH
 STRING 00FFH, 00FFH, 00FFH, 00FFH
-STRING 00C1H, 0008H, 0021H, 0042H
-STRING 00F7H, 007EH, 00EDH, 00BFH
+STRING 00C1H, 0008H, 0021H, 0043H
+STRING 00F7H, 007EH, 00EDH, 005FH
 STRING 00F7H, 000EH, 00E3H, 0067H
 STRING 00F7H, 007EH, 00EBH, 007BH
 STRING 00F7H, 000EH, 00EDH, 0043H
@@ -59,12 +60,12 @@ STRING 00FFH, 00FFH, 00FFH, 00FFH
 STRING 00FFH, 00FFH, 00FFH, 00FFH
 STRING 00FFH, 00FFH, 00FFH, 00FFH
 STRING 00FFH, 00FFH, 00FFH, 00FFH
-STRING 00FFH, 00FFH, 00FFH, 00FFH
-STRING 00C4H, 0044H, 0045H, 00DFH
-STRING 00C5H, 004CH, 00CFH, 00DFH
-STRING 00DCH, 00DFH, 0077H, 00C7H
-STRING 00DDH, 0044H, 0045H, 00C7H
-STRING 00FFH, 00FFH, 00FFH, 00FFH
+STRING 00FFH, 00FFH, 00FFH, 0087H
+STRING 00C4H, 0044H, 0045H, 00BBH
+STRING 00C5H, 004CH, 00CFH, 0087H
+STRING 00DCH, 00DFH, 0077H, 00BBH
+STRING 00DDH, 0044H, 0045H, 00BBH
+STRING 00FFH, 00FFH, 00FFH, 0087H
 STRING 00FFH, 00FFH, 00FFH, 00FFH
 STRING 00FFH, 00FFH, 00FFH, 00FFH
 STRING 00FFH, 00FFH, 00FFH, 00FFH
@@ -152,8 +153,8 @@ SP_pilha:					 ; Etiqueta com o endereço final da pilha
 ; *********************************************************************************
 
 ; Tabela de vectores de interrupção
-;tab_int:        WORD    int0
-;				WORD    int1
+tab_int:        WORD    int0
+				WORD    int1
 
 ; *********************************************************************************
 ; * Tabela de endereços de estados do loop de controlo
@@ -177,8 +178,9 @@ estado_programa:                ; variavel que guarda o estado actual do control
 PLACE      0
 inicializacao:		       ; Inicializações gerais
 	mov  SP, SP_pilha
-;	mov  BTE, tab			;inicializacao BTE
-
+	mov  BTE, tab_int			;inicializacao BTE
+	EI0
+	EI1
 ; ***********************************************************************
 ; * Estados
 ; * Código
@@ -510,8 +512,43 @@ ciclo_pausa:
     JNZ   ciclo_pausa       ; Enquanto não for 0 continua a subtrair
     POP   R0                ; Recupera registos
     RET
+; **********************************************************************
+; Numeros aleatorio
+;   Rotina que faz uma pausa.
+; Entradas:
+;  
+; Saidas:
+;   Memoria adr_Nr_random
+; **********************************************************************
 
-
+random:
+	push R0
+	push R1
+	mov R0, adr_Nr_random
+	mov R1, [R0]
+	add R1,1
+	mov [R0],R1
+	Pop R1
+	pop R0
+	RET
 
 	
-	
+; **********************************************************************
+; Interrupçao 0
+;   Rotina que faz uma pausa.
+; Entradas:
+;  
+; Saidas:
+;   Nenhuma
+; **********************************************************************
+int0:
+	call random ;Criar numeros aleatorio
+; **********************************************************************
+; Interrupçao 1
+;   Rotina que faz uma pausa.
+; Entradas:
+;  
+; Saidas:
+;   Nenhuma
+; **********************************************************************
+int1:
