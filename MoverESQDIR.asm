@@ -52,7 +52,7 @@ fim_mover_direita:
 ; * 	R3 - Coluna onde vai ser desenhado
 ; *********************************************************************************
 
-mover_direita:
+mover_esquerda:
 	PUSH R0
 	PUSH R1
 	PUSH R2
@@ -69,10 +69,10 @@ mover_direita:
 	MOVB R5, [R0] ; R5 com o valor correspondente ao numero de colunas da tabela
 	CALL verifica_desenhar
 	AND R11, R11 (O registo depende da funcao verifica_desenhar)
-	JZ fim_mover_direita ; Se nao poder desenhar acaba
+	JZ fim_mover_esquerda ; Se nao poder desenhar acaba
 	CALL apagar
 	CALL desenhar_tetra
-fim_mover_direita:
+fim_mover_esquerda:
 	POP R8
 	POP R7
 	POP R6
