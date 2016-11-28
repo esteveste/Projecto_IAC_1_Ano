@@ -1,106 +1,126 @@
 ecralinha:
-STRING 0000H, 0000H, 0010H, 0000H
+STRING 0000H, 0008H, 0000H, 0000H
 
 tetraminos:
-	tetraminoI:
-		tetraminoI1:
-			STRING 4, 1; linhas e colunas
-			STRING 1
-			STRING 1
-			STRING 1
-			STRING 1
+WORD tetraminoI
+WORD tetraminoL
+WORD tetraminoT
+WORD tetraminoS
+
+tetraminoI:
+WORD tetraminoI1
+WORD tetraminoI2
+WORD tetraminoI3
+WORD tetraminoI4
+
+tetraminoI1:
+STRING 4, 1; linhas e colunas
+STRING 1
+STRING 1
+STRING 1
+STRING 1
 		
-		tetraminoI2:
-			STRING 1, 4; linhas e colunas
-			STRING 1, 1, 1, 1
+tetraminoI2:
+STRING 1, 4; linhas e colunas
+STRING 1, 1, 1, 1
 			
-		tetraminoI3:
-			STRING 4, 1; linhas e colunas
-			STRING 1
-			STRING 1
-			STRING 1
-			STRING 1
+tetraminoI3:
+STRING 4, 1; linhas e colunas
+STRING 1
+STRING 1
+STRING 1
+STRING 1
 		
-		tetraminoI4:
-			STRING 1, 4; linhas e colunas
-			STRING 1, 1, 1, 1
+tetraminoI4:
+STRING 1, 4; linhas e colunas
+STRING 1, 1, 1, 1
 	
-	tetraminoL:
-		tetraminoL1:
-			STRING 3, 2; linhas e colunas
-			STRING 1, 0
-			STRING 1, 0
-			STRING 1, 1
+tetraminoL:
+WORD tetraminoL1
+WORD tetraminoL2
+WORD tetraminoL3
+WORD tetraminoL4
+
+tetraminoL1:
+STRING 3, 2; linhas e colunas
+STRING 1, 0
+STRING 1, 0
+STRING 1, 1
 			
-		tetraminoL2:
-			STRING 2, 3; linhas e colunas
-			STRING 1, 1, 1
-			STRING 1, 0, 0
+tetraminoL2:
+STRING 2, 3; linhas e colunas
+STRING 1, 1, 1
+STRING 1, 0, 0
 			
-		tetraminoL3:
-			STRING 3, 2; linhas e colunas
-			STRING 1, 1
-			STRING 0, 1
-			STRING 0, 1
+tetraminoL3:
+STRING 3, 2; linhas e colunas
+STRING 1, 1
+STRING 0, 1
+STRING 0, 1
 			
-		tetraminoL4:
-			STRING 2, 3; linhas e colunas
-			STRING 0, 0, 1
-			STRING 1, 1, 1
+tetraminoL4:
+STRING 2, 3; linhas e colunas
+STRING 0, 0, 1
+STRING 1, 1, 1
 		
-	tetraminoS:
-		tetraminoS1:
-			STRING 2, 3; linhas e colunas
-			STRING 0, 1, 1
-			STRING 1, 1, 0
+tetraminoS:
+WORD tetraminoS1
+WORD tetraminoS2
+WORD tetraminoS3
+WORD tetraminoS4
+
+tetraminoS1:
+STRING 2, 3; linhas e colunas
+STRING 0, 1, 1
+STRING 1, 1, 0
 		
-		tetraminoS2:
-			STRING 3, 2; linhas e colunas
-			STRING 1, 0
-			STRING 1, 1
-			STRING 0, 1
+tetraminoS2:
+STRING 3, 2; linhas e colunas
+STRING 1, 0
+STRING 1, 1
+STRING 0, 1
 			
-		tetraminoS3:
-			STRING 2, 3; linhas e colunas
-			STRING 1, 1, 0
-			STRING 0, 1, 1
+tetraminoS3:
+STRING 2, 3; linhas e colunas
+STRING 1, 1, 0
+STRING 0, 1, 1
 			
-		tetraminoS4:
-			STRING 3, 2; linhas e colunas
-			STRING 0, 1
-			STRING 1, 1
-			STRING 1, 0
+tetraminoS4:
+STRING 3, 2; linhas e colunas
+STRING 0, 1
+STRING 1, 1
+STRING 1, 0
 			
-	tetraminoT:
-		tetraminoT1:
-			STRING 2, 3; linhas e colunas
-			STRING 1, 1, 1
-			STRING 0, 1, 0
+tetraminoT:
+WORD tetraminoT1
+WORD tetraminoT2
+WORD tetraminoT3
+WORD tetraminoT4
+
+tetraminoT1:
+STRING 2, 3; linhas e colunas
+STRING 1, 1, 1
+STRING 0, 1, 0
 			
-		tetraminoT2:
-			STRING 3, 2; linhas e colunas
-			STRING 0, 1
-			STRING 1, 1
-			STRING 0, 1
+tetraminoT2:
+STRING 3, 2; linhas e colunas
+STRING 0, 1
+STRING 1, 1
+STRING 0, 1
 		
-		tetraminoT3:
-			STRING 2, 3; linhas e colunas
-			STRING 0, 1, 0
-			STRING 1, 1, 1
+tetraminoT3:
+STRING 2, 3; linhas e colunas
+STRING 0, 1, 0
+STRING 1, 1, 1
 			
-		tetraminoT4:
-			STRING 3, 2; linhas e colunas
-			STRING 1, 0
-			STRING 1, 1
-			STRING 1, 0
-			
-	tetraminoQ:
-		STRING 2, 2; linhas e colunas
-		STRING 1, 1
-		STRING 1, 1
+tetraminoT4:
+STRING 3, 2; linhas e colunas
+STRING 1, 0
+STRING 1, 1
+STRING 1, 0
 
 monstro:
-	STRING 3, 3; linhas e colunas
-	STRING 1, 0, 1
-	STRING 0, 1, 0
-	STRING 1, 0, 1
+STRING 3, 3; linhas e colunas
+STRING 1, 0, 1
+STRING 0, 1, 0
+STRING 1, 0, 1
