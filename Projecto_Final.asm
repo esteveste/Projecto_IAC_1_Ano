@@ -27,7 +27,6 @@ linha	                EQU 8H       ; Posição do bit correspondente à linha a 
 local_Segmentos	        EQU 0A000H 	 ; Endereco do display de 7 segmentos
 out_Teclado	            EQU 0C000H   ; Endereço do porto de escrita do teclado
 in_Teclado		        EQU 0E000H   ; Endereço do porto de leitura do teclado
-<<<<<<< HEAD
 MAX_ECRA                EQU 128H     ; Número de bytes do ecrã
 MAX_ELE 	            EQU 128
 tecla_pausa             EQU 0CH
@@ -43,7 +42,6 @@ estado_jogo             EQU 3
 estado_Suspender        EQU 4
 estado_Gameover         EQU 5
 estado_About            EQU 6
-=======
 MAX_ECRA   EQU 128H      ; Número de bytes do ecrã
 MAX_ELE 	EQU 128
 tecla_pausa EQU 0CH
@@ -53,19 +51,12 @@ tecla_jogar EQU 0BH
 local_Ecra	EQU 8000H
 OFF         EQU 0        ; Valor da tecla nao premida
 ON          EQU 1        ; Valor da tecla premida
-estado_Welcome EQU 1 
-estado_Preparar_jogo EQU 2
-estado_Jogo EQU 3
-estado_Suspender EQU 4
-estado_Gameover EQU 5
-estado_About EQU 6
 mascara_0_1bits EQU 3H
 mascara_2_3bits EQU CH
 sequencia_tetraminoI EQU 00
 sequencia_tetraminoL EQU 01
 sequencia_tetraminoT EQU 10
 sequencia_tetraminoS EQU 11
->>>>>>> 4fa26f927d98dfb3e02df656900832d6be5d993a
 ; ***********************************************************************
 ; * Ecras
 ; ***********************************************************************
