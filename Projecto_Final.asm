@@ -34,7 +34,12 @@ tecla_jogar EQU 0BH
 local_Ecra	EQU 8000H
 OFF         EQU 0        ; Valor da tecla nao premida
 ON          EQU 1        ; Valor da tecla premida
-
+estado_welcome EQU 1 
+estado_start EQU 2
+estado_jogo EQU 3
+estado_Suspender EQU 4
+estado_Gameover EQU 5
+estado_About EQU 6
 ; ***********************************************************************
 ; * Ecras
 ; ***********************************************************************
