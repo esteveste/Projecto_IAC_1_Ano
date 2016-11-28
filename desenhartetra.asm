@@ -3,6 +3,7 @@
 ; *  Desenha tetraminos ou monstros nas posicoes devidas
 ; *Entradas:
 ; *  R0 - Tabela de strings do tetramino a desenhar
+; *  R9 - 1 (escreve) ou 0 (apaga)
 ; * Recebe da Memoria:
 ; *  R2 - Linha da posicao onde desenhar
 ; *  R3 - Coluna da posicao onde desenhar
@@ -20,6 +21,7 @@ desenhar_tetra:
 	PUSH R6
 	PUSH R7
 	PUSH R8
+	PUSH R9
 	MOV R8, adr_x ; Atualiza R0 com o valor correspondente a linha inicial onde desenhar o tetramino
 	MOVB R2, [R8] ; Mete em R2, o valor da linha onde comecar a desenhar
 	MOV R8, adr_y ; Acede a tabela que contem as posicoes 
@@ -32,6 +34,8 @@ desenhar_tetra:
 	MUL R7, R5 ; Multiplica o valor das linhas pelas colunas, para criar 1 contador do numero de elementos da tabela
 	ADD R3, 2 ; Permite repor corretamente os contadores
 	SUB R2, 1 ; Permite repor corretamente os contadores
+	AND R9, R9 ; Ativa as flags
+	JZ fim_desenhar_tetra ; Se for 0 salta para o fim para apagar
 repor_colunas:
 	MOV R6, R5 ; Duplica o valor das colunas em registo para fazer um contador
 	SUB R3, 2 ; Repoe o valor da coluna onde escrever
@@ -49,6 +53,8 @@ nao_desenhar0:
 	SUB R7, 1
 	JNZ loop_desenhar_tetra
 fim_desenhar_tetra:
+	CALL apagar_tetra ; Rotina que apaga o tetramino
+	pop R9
 	POP R8
 	POP R7
 	POP R6
