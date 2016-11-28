@@ -19,12 +19,15 @@
 
 adr_Tecla_Valor         EQU 1400H	 ; Endereço de memória onde se guarda a tecla premida
 adr_Nr_random 			EQU 1410H
-adr_x					EQU 1420H
-adr_y					EQU 1430H
+adr_x					EQU 1420H  ;linha
+adr_y					EQU 1430H   ;coluna 
+adr_tetra_tipo			EQU 1440H  
+adr_tetra_rot 			EQU 1450H ;nr a adicionar ao tipo na tabela(melhorar coment)
 linha	                EQU 8H       ; Posição do bit correspondente à linha a testar
 local_Segmentos	        EQU 0A000H 	 ; Endereco do display de 7 segmentos
 out_Teclado	            EQU 0C000H   ; Endereço do porto de escrita do teclado
 in_Teclado		        EQU 0E000H   ; Endereço do porto de leitura do teclado
+<<<<<<< HEAD
 MAX_ECRA                EQU 128H     ; Número de bytes do ecrã
 MAX_ELE 	            EQU 128
 tecla_pausa             EQU 0CH
@@ -40,6 +43,29 @@ estado_jogo             EQU 3
 estado_Suspender        EQU 4
 estado_Gameover         EQU 5
 estado_About            EQU 6
+=======
+MAX_ECRA   EQU 128H      ; Número de bytes do ecrã
+MAX_ELE 	EQU 128
+tecla_pausa EQU 0CH
+tecla_about EQU 0AH
+tecla_terminar EQU 0EH
+tecla_jogar EQU 0BH
+local_Ecra	EQU 8000H
+OFF         EQU 0        ; Valor da tecla nao premida
+ON          EQU 1        ; Valor da tecla premida
+estado_Welcome EQU 1 
+estado_Preparar_jogo EQU 2
+estado_Jogo EQU 3
+estado_Suspender EQU 4
+estado_Gameover EQU 5
+estado_About EQU 6
+mascara_0_1bits EQU 3H
+mascara_2_3bits EQU CH
+sequencia_tetraminoI EQU 00
+sequencia_tetraminoL EQU 01
+sequencia_tetraminoT EQU 10
+sequencia_tetraminoS EQU 11
+>>>>>>> 4fa26f927d98dfb3e02df656900832d6be5d993a
 ; ***********************************************************************
 ; * Ecras
 ; ***********************************************************************
@@ -353,8 +379,40 @@ Preparar_jogo:
 	RET				; Termina a rotina
 ;####Jogo
 Jogo:
+	mov R1, adr_x
+	mov R0,0
+	mov [R1], R0 ;mete a posicao padrao para ser escrita
+	mov R0,0
 	mov R1, adr_Nr_random
 	mov R0, [R1] ;Nr aleatorio
+	mov R1, mascara_0_1bits
+	and R0, R1 ;;isola os ultimos 2 bits
+select_tetra:
+	mov R1,0 ;valor a saltar na tab tetraminos
+	CMP R0, sequencia_tetraminoI
+	JZ write_tab_tetra
+	add R1,1
+	CMP R0, sequencia_tetraminoL
+	JZ write_tab_tetra
+	add R1,1
+	CMP R0, sequencia_tetraminoT
+	JZ write_tab_tetra
+	add R1,1
+	CMP R0, sequencia_tetraminoS
+	JZ write_tab_tetra
+	
+write_tab_tetra:
+	mov R2, tetraminos ;endereco para selecionar tetra
+	add R2, R1;mete o pointer no tetra
+	mov R1, [R2] ;mete na variavel endereco tabela rotacao de tetra
+	mov R0, adr_tetra_tipo 
+	mov [R0], R1 ; escreve a tabela rotacao de tetra em adr_tetra_tipo
+	mov R0, adr_tetra_rot ;para registar na memoria o valor inicial da rotacao
+	mov [R0], 0H; rotacao inicial de tetra
+	
+	
+	
+	
 	
 ; **********************************************************************
 ; Teclado
