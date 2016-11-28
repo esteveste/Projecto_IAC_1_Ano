@@ -166,7 +166,7 @@ tab_int:        WORD    int0
 
 tab_estado:
     WORD  Welcome     ; 1
-	WORD Start	; 2
+	WORD Preparar_jogo	; 2
 	WORD  Jogo ; 3
 	Word Suspender ; 4 
 	Word Gameover ; 5
@@ -182,8 +182,8 @@ PLACE      0
 inicializacao:		       ; Inicializações gerais
 	mov  SP, SP_pilha
 	mov  BTE, tab_int			;inicializacao BTE
-	EI0
-	EI1
+	;EI0
+	;EI1
 ; ***********************************************************************
 ; * Estados
 ; * Código
@@ -324,9 +324,33 @@ sair_gameover:
 	POP R1 ; Devolve R1
 	POP R0 ; Devolve R0
 	RET ; Termina a rotina
+; *********************************************************************************
+; * Rotina que cria prepara o jogo
+; *********************************************************************************
+
+Preparar_jogo:
+	PUSH R0
+	PUSH R1
+	CALL limpar
+	CALL ecra_linhalateral ; Chama a rotina para desenhar o limite lateral
+	MOV R0, estado_programa ; Move o endereco do estado_programa para R0
+	MOV R1, 3 ; Atualiza R1 com o valor do estado jogar
+	MOVB [R0], R1 ; Atualiza o valor do estado_programa para o estado atual (estado jogar)
+	;MOV R0, l_centro_tetramino ; Atualiza R0 com a word que contem a linha inicial para desenhar o tetramino
+	;MOV R2, [R0] ; Atualiza R1 com o valor da linha
+	;MOV R0, c_centro_tetramino ; Atualiza R0 com a word que contem a coluna inicial para desenhar o tetramino
+	;MOV R3, [R0] ; Atualiza R2 com o valor da coluna
+	;CALL desenha_tetramino ; Chama a rotina que vai desenhar o tetramino
+	CALL inicializar_pontos ; Chama a rotina que vai inicializar a contagem dos pontos
+	;EI ; Liga as interrupcoes para permitir o movimento dos tetraminos
+	POP R1
+	POP R0
+	RET
 ;####Jogo
 Jogo:
-	jmp Jogo
+	mov R1, adr_Nr_random
+	mov R0, [R1] ;Nr aleatorio
+	
 ; **********************************************************************
 ; Teclado
 ;   Verifica se alguma tecla foi premida e guarda o valor na memória
