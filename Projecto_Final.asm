@@ -524,10 +524,51 @@ write_tab_tetra:
 	mov R0, adr_tetra_rot ;para registar na memoria o valor inicial da rotacao
 	mov R1, 0H
 	mov [R0], R1; rotacao inicial de tetra
+	call desenha_tetramino
+;;Recebe nada	(memoria, adr_tetra_tipo adr_tetra_rot)
+desenha_tetramino:
+	;vai buscar x e y aonde escrever
+	mov R0, adr_x
+	mov R2, [R0]
+	mov R0, adr_y
+	mov R3, [R0]
+	;arranjar endereco tab final tetra
+	mov R1, adr_tetra_tipo
+	mov R0,[R1]
+	mov R1, adr_tetra_rot
+	mov R2, [R1]
+	add R0,R2 ;endereco tabela final
+	;ir buscar x e y do tetramino 
+	mov R4,[R0] ;linha
+	add R0,2 ;adr coluna
+	mov R5,[R0];coluna
+	;call 
 
+algo:
+	push R5
+coluna:
+	cmp R5,R5
+;	jz linha
+	sub R5,1
+	
+	add R0,2 ;anda para o seguinte
+	mov R8,[R0]
+	cmp R8,R8
+	jz coluna
+	;add R2,
+	call desenhar_pixel
+;linha:
+	cmp R4,R4
+	jz fim_des_tetra
 	
 	
+fim_des_tetra:
 	
+	
+; *Entradas:
+; *  R1 - Valor a escrever (1 ou 0)
+; *  R2 - Linha onde escrever
+; *  R3 - Coluna onde escrever
 	
 ; **********************************************************************
 ; Teclado
@@ -627,20 +668,18 @@ display_Inativo:           ; Ecra mostra que nao ha tecla premida
 	;mov  R6,0              ; O ciclo do ecra inativo ja foi corrido
 	;mov  R5,OFF; Sem tecla premida
 	jmp  definir_Linha
-##### Recebe R1
+;##### Recebe R1
 ecra_segmentos:             ; Mostra que tecla foi premida, no ecra de segmentos
 	push R0				   ; Guarda registos
 	push R1
 	push R2
-	;mov  R1, adr_Tecla_Valor        ; Endereço de memória com o valor da tecla
-	movb R2,[R1]           ; Obtem valor da tecla
 	mov  R0, local_Segmentos   ; Define endereço de escrita display (0A000H)
-	movb [R0],R2           ; Escrever no display o valor da tecla
+	movb [R0],R1           ; Escrever no display o valor da tecla
 	pop  R2				   ; Retorna registos
 	pop  R1
 	pop  R0
 	;mov  R6,1			   ; Define um valor que representa que a tecla ja foi representada no ecra
-	jmp  scan_Teclado      ; Volta a varrer o teclado
+	ret
 ; *********************************************************************************
 ; * Rotina que limpa o ecra
 ; *********************************************************************************
@@ -663,6 +702,64 @@ loop_limpar:
 	RET ; Termina a rotina
 ;############################################################
 ; **********************************************************************
+; * Desenha Pixel
+; *  Desenha ou apaga um pixel no ecrã com base nas linhas e colunas
+; *Entradas:
+; *  R1 - Valor a escrever (1 ou 0)
+; *  R2 - Linha onde escrever
+; *  R3 - Coluna onde escrever
+; *Saídas:
+; *  Nenhuma
+; **********************************************************************
+
+desenhar_pixel:
+    PUSH  R0 ; Guarda R0
+    PUSH  R1 ; Guarda R1
+    PUSH  R2 ; Guarda R2
+    PUSH  R3 ; Guarda R3
+    PUSH  R4 ; Guarda R4
+    PUSH  R5 ; Guarda R5
+    PUSH  R6 ; Guarda R6
+    PUSH  R7 ; Guarda R7
+    PUSH  R8 ; Guarda R8
+	MOV R0, local_Ecra ; Atualiza R0 com o endereco do ecra
+	MOV R4, 4 ; Atualiza R4 com o numero de bytes de cada linha do ecra (linhas)
+	MOV R5, 8 ; Atualiza R5 com o numero de bits por byte do ecra (colunas)
+	MOV R6, 80H ; (10000000) Mascara que permite escrever nas colunas de cada byte atraves de shifts
+	MUL R4, R2 ; Transforma R2 numa linha do ecra
+	ADD R0, R4 ; Acede a linha do ecra onde e suposto escrever
+	MOV R7, R3 ; R7 com o valor da coluna para dividir pelo numero de colunas
+	DIV R7, R5 ; Transforma R7 numa coluna da linha onde escrever
+	ADD R0, R7 ; Acede a coluna onde escrever
+	MOD R3, R5 ; R3 com o bit onde escrever (R3 sera um valor de 0-7 que sao o numero de colunas)
+selecao_pixel:
+	AND R3, R3 ; Afectar as flags
+	JZ escrever_ou_apagar ; Quando for o ultimo bit a verificar salta para decidir se desenha ou apaga
+	SHR R6, 1 ; Atualiza a mascara para o bit seguinte ate ao bit onde e suposto escrever
+	SUB R3, 1 ; Atualiza a coluna (avanca para o proximo bit)
+	JMP selecao_pixel ; Verifica os bits todos de R3
+escrever_ou_apagar:
+	MOVB R8, [R0] ; Move para R8 o que esta escrito no byte do ecra
+	AND R1, R1 ; Afectar as flags
+	JNZ escrever; Caso seja para escrever salta para escrever
+	NOT R6 ; Nega a mascara para poder apagar o bit
+	AND R8, R6 ; Apaga apenas o bit escolhido
+	JMP fim_desenhar_pixel ; Acaba de desenhar o pixel
+escrever:
+	OR R8, R6 ; Cria a mascara com o bit final a desenhar
+fim_desenhar_pixel:
+	MOVB [R0], R8 ; Escreve no ecra
+    POP R8 ; Devolve R8
+    POP R7 ; Devolve R7
+    POP R6 ; Devolve R6
+    POP R5 ; Devolve R5
+    POP R4 ; Devolve R4
+    POP R3 ; Devolve R3
+    POP R2 ; Devolve R2
+    POP R1 ; Devolve R1
+    POP R0 ; Devolve R0
+    RET ; Termina rotina
+; **********************************************************************
 ; Escreve Ecrã
 ;   Rotina que desenha uma tabela de strings no ecrã
 ; Entradas
@@ -677,7 +774,7 @@ escreve_tabela_ecra:
     PUSH  R2
     PUSH  R3
     MOV   R3, local_Ecra          ; Endereço do ecrã
-    ADD   R3, R1            ; Actualização do endereço onde começar a escrever
+    ;ADD   R3, R1            ; Actualização do endereço onde começar a escrever
     MOV   R2, MAX_ELE       ; Número de elementos da tabela de strings
 ciclo_ecra:  
     MOVB  R1, [R0]          ; Elemento actual da tabela de strings
@@ -692,7 +789,31 @@ ciclo_ecra:
     POP   R0
     RET   					; Termina a rotina
 	
-	
+; *********************************************************************************
+; * Rotina que cria o limite lateral do ecra
+; *********************************************************************************
+
+ecra_linhalateral:
+	PUSH R0 ; Guarda Registos
+	PUSH R1
+	PUSH R2
+	PUSH R3
+	MOV R0, 32 ; R0 com um contador para ver se todas as linhas estao pintadas
+	MOV R1, 1 ; Valor a escrever
+	MOV R2, 0 ; Linha inicial onde comecar a pintada
+loop_desenharlinha:
+	MOV R3, 12 ; Coluna fixa onde escrever o limite lateral
+	CALL desenhar_pixel ; Rotina que desenha 1 pixel
+	SUB R0, 1 ; Atualiza o contador de linhas
+	JZ fim_linhalateral ; Se ja desenhou todas as linhas acaba
+	ADD R2, 1
+	JMP loop_desenharlinha ; Corre o loop outra vez ate todas as linhas estarem pintadas
+fim_linhalateral:
+	POP R3 ; Devolve Registos
+	POP R2
+	POP R1
+	POP R0
+	RET ; Termina a rotina
 	
 ; **********************************************************************
 ; Inverte Ecrã
