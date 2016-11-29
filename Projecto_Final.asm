@@ -48,6 +48,7 @@ sequencia_tetraminoI 	EQU 00H
 sequencia_tetraminoL 	EQU 01H
 sequencia_tetraminoT 	EQU 02H
 sequencia_tetraminoS 	EQU 03H
+sequencia_monstro 		EQU 02H
 ; ***********************************************************************
 ; * Ecras
 ; ***********************************************************************
@@ -310,7 +311,7 @@ tab_estado:
 	Word Gameover 		; 4
 	Word About 			; 5
 estado_programa:        ; variavel que guarda o estado actual do controlo
-    STRING 1H; ;;SEMMPREEE MOVB
+    STRING 0H; ;;SEMMPREEE MOVB
 
 ; ***********************************************************************
 ; * Código
@@ -320,7 +321,8 @@ PLACE      0
 inicializacao:		     ; Inicializações gerais
 	mov  SP, SP_pilha
 	mov  BTE, tab_int	 ; Inicializacao BTE
-	;EI0
+	EI
+	EI0
 	;EI1
 ; ***********************************************************************
 ; * Estados
@@ -498,6 +500,7 @@ Jogo:
 	PUSH R2
 	PUSH R3
 	PUSH R8
+	Push R9
 	mov R1, adr_x
 	mov R0,0
 	mov [R1], R0 			; mete a posicao padrao para ser escrita
@@ -529,6 +532,7 @@ write_tab_tetra:
 	MOVB [R8], R3 ; Mete em R3, o valor da coluna onde comecar a desenhar	
 	
 	mov R2, tetraminos 		; endereco para selecionar tetra
+	shl R1,1 ;multiplica por 2 
 	add R2, R1				; mete o pointer no tetra
 	mov R1, [R2] 			; mete na variavel endereco tabela rotacao de tetra
 	mov R0, adr_tetra_tipo 
@@ -540,7 +544,26 @@ write_tab_tetra:
 	mov R9,1 ;Modo Escreve
 	call desenhar_tetra
 	EI0
-	
+random_monstro:
+	mov R1, adr_Nr_random
+	mov R0, [R1] 			; Nr aleatorio
+	mov R1, mascara_2_3bits
+	and R0, R1
+	CMP R0, sequencia_monstro
+	;jz criar_monstro
+;criar_monstro:
+	;DI ;visto que vamos mexer na tabela do tetra mino atual
+	;MOV 
+	mov R0, estado_programa ; Fazer comentarios diferentes ; Obter o estado actual adrress
+	mov R1, estado_Welcome  ; 
+	movb [R0], R1
+	Pop R9
+	POP R8
+	POP R3 
+	POP R2
+	POP R1
+	POP R0
+	RET
 	
 ;;Recebe nada	(memoria, adr_tetra_tipo adr_tetra_rot)
 ; **********************************************************************
@@ -573,17 +596,17 @@ desenhar_tetra:
 	;ADD R0, 1 ; Acede ao proximo elemento da tabela de strings
 	;MOVB R5, [R0] ; R5 com o valor correspondente ao numero de colunas da tabela
 	
-	mov R1, adr_tetra_tipo
-	mov R0,[R1]
-	mov R1, adr_tetra_rot
-	mov R2, [R1]
-	shl R2,1 ; multiplica por 2
-	add R0,R2 ;endereco tabela final
+	mov R0, adr_tetra_tipo
 	mov R1,[R0]
+	mov R0, adr_tetra_rot
+	mov R2, [R0]
+	shl R2,1 ; multiplica por 2
+	add R1,R2 ;endereco tabela final
+	mov R0,[R1]
 	;ir buscar x e y do tetramino 
-	movB R4,[R1] ;linha
-	add R1,1 ;adr coluna
-	movb R5,[R1];coluna
+	movB R4,[R0] ;linha
+	add R0,1 ;adr coluna
+	movb R5,[R0];coluna
 
 	MOV R8, adr_y ; Atualiza R0 com o valor correspondente a linha inicial onde desenhar o tetramino
 	MOVB R2, [R8] ; Mete em R2, o valor da linha onde comecar a desenhar
@@ -599,6 +622,7 @@ repor_colunas:
 	MOV R6, R5 ; Duplica o valor das colunas em registo para fazer um contador
 	SUB R3, R5 ; Repoe o valor da coluna onde escrever
 	ADD R2, 1 ; Muda a linha onde escrever
+	
 loop_desenhar_tetra:
 	ADD R0, 1 ; Acede ao proximo elemento da tabela
 	MOVB R1, [R0] ; R1 com o valor a escrever no ecra
@@ -606,12 +630,15 @@ loop_desenhar_tetra:
 	JZ nao_desenhar0 ; Se for 0 nao desenha
 	CALL desenhar_pixel ; Chama a rotina que desenha 1 pixel da tabela de strings
 nao_desenhar0:
+	Sub R7,1
+	JZ fim_desenhar_tetra ; Se ainda nao acabou corre outra vez
 	ADD R3, 1 ; Muda a coluna onde escrever
 	SUB R6, 1 ; Atualiza o contador de colunas
 	JZ repor_colunas ; Se for 0 repoe as colunas
-	SUB R7, 1 ; Atualiza o contador de elementos da tabela
-	JNZ loop_desenhar_tetra ; Se ainda nao acabou corre outra vez
+	JMP loop_desenhar_tetra
+	
 fim_desenhar_tetra:
+	POP R9
 	POP R8
 	POP R7
 	POP R6
@@ -950,6 +977,7 @@ random:
 ; **********************************************************************
 int0:
 	call random 			;Criar numeros aleatorio
+	RFE
 ; **********************************************************************
 ; Interrupçao 1
 ;   Rotina que faz uma pausa.
