@@ -310,7 +310,7 @@ tab_estado:
 	Word Gameover 		; 4
 	Word About 			; 5
 estado_programa:        ; variavel que guarda o estado actual do controlo
-    STRING 0H; ;;SEMMPREEE MOVB
+    STRING 1H; ;;SEMMPREEE MOVB
 
 ; ***********************************************************************
 ; * Código
@@ -493,6 +493,11 @@ Preparar_jogo:
 
 ;####Jogo
 Jogo:
+	PUSH R0
+	PUSH R1
+	PUSH R2
+	PUSH R3
+	PUSH R8
 	mov R1, adr_x
 	mov R0,0
 	mov [R1], R0 			; mete a posicao padrao para ser escrita
@@ -516,6 +521,13 @@ select_tetra:
 	JZ write_tab_tetra
 	
 write_tab_tetra:
+	MOV R8, adr_x ; Atualiza R0 com o valor correspondente a linha inicial onde desenhar o tetramino
+	mov R3, 6
+	MOVB [R8],R3 ; Mete em R2, o valor da linha onde comecar a desenhar
+	MOV R8, adr_y ; Acede a tabela que contem as posicoes 
+	MOV R3, 0
+	MOVB [R8], R3 ; Mete em R3, o valor da coluna onde comecar a desenhar	
+	
 	mov R2, tetraminos 		; endereco para selecionar tetra
 	add R2, R1				; mete o pointer no tetra
 	mov R1, [R2] 			; mete na variavel endereco tabela rotacao de tetra
@@ -523,51 +535,94 @@ write_tab_tetra:
 	mov [R0], R1 			; escreve a tabela rotacao de tetra em adr_tetra_tipo
 	mov R0, adr_tetra_rot 	; para registar na memoria o valor inicial da rotacao
 	mov R1, 0H
-<<<<<<< HEAD
+
 	mov [R0], R1; rotacao inicial de tetra
-	call desenha_tetramino
+	mov R9,1 ;Modo Escreve
+	call desenhar_tetra
+	EI0
+	
+	
 ;;Recebe nada	(memoria, adr_tetra_tipo adr_tetra_rot)
-desenha_tetramino:
-	;vai buscar x e y aonde escrever
-	mov R0, adr_x
-	mov R2, [R0]
-	mov R0, adr_y
-	mov R3, [R0]
-	;arranjar endereco tab final tetra
+; **********************************************************************
+; * Desenha Tetramino ou Monstro
+; *  Desenha tetraminos ou monstros nas posicoes devidas
+; *Entradas:
+; *  //R0 - Tabela de strings do tetramino a desenhar
+; *  R9 - 1 (escreve) ou 0 (apaga)
+; * Recebe da Memoria:
+; *  R2 - Linha da posicao onde desenhar
+; *  R3 - Coluna da posicao onde desenhar
+; *Saídas:
+; *  R2 e R3 nao alterados
+; **********************************************************************
+
+desenhar_tetra:
+	PUSH R0
+	PUSH R1
+	PUSH R2
+	PUSH R3
+	PUSH R4
+	PUSH R5
+	PUSH R6
+	PUSH R7
+	PUSH R8
+	PUSH R9
+
+	;MOV R0, tabelatetramino ; R0 com a tabela de strings correspondente a variante de tetramino a desenhar
+	;MOVB R4, [R0] ; R4 com o valor correspondente ao numero de linhas da tabela
+	;ADD R0, 1 ; Acede ao proximo elemento da tabela de strings
+	;MOVB R5, [R0] ; R5 com o valor correspondente ao numero de colunas da tabela
+	
 	mov R1, adr_tetra_tipo
 	mov R0,[R1]
 	mov R1, adr_tetra_rot
 	mov R2, [R1]
+	shl R2,1 ; multiplica por 2
 	add R0,R2 ;endereco tabela final
+	mov R1,[R0]
 	;ir buscar x e y do tetramino 
-	mov R4,[R0] ;linha
-	add R0,2 ;adr coluna
-	mov R5,[R0];coluna
-	;call 
+	movB R4,[R1] ;linha
+	add R1,1 ;adr coluna
+	movb R5,[R1];coluna
 
-algo:
-	push R5
-coluna:
-	cmp R5,R5
-;	jz linha
-	sub R5,1
+	MOV R8, adr_y ; Atualiza R0 com o valor correspondente a linha inicial onde desenhar o tetramino
+	MOVB R2, [R8] ; Mete em R2, o valor da linha onde comecar a desenhar
+	MOV R8, adr_x ; Acede a tabela que contem as posicoes 
+	MOVB R3, [R8] ; Mete em R3, o valor da coluna onde comecar a desenhar	
 	
-	add R0,2 ;anda para o seguinte
-	mov R8,[R0]
-	cmp R8,R8
-	jz coluna
-	;add R2,
-	call desenhar_pixel
-;linha:
-	cmp R4,R4
-	jz fim_des_tetra
 	
-=======
-	mov [R0], R1			; rotacao inicial de tetra
+	MOV R7, R4 ; Duplica o valor das linhas em registo para criar 1 contador
+	MUL R7, R5 ; Multiplica o valor das linhas pelas colunas, para criar 1 contador do numero de elementos da tabela
+	ADD R3, R5 ; Permite repor corretamente os contadores
+	SUB R2, 1 ; Permite repor corretamente os contadores
+repor_colunas:
+	MOV R6, R5 ; Duplica o valor das colunas em registo para fazer um contador
+	SUB R3, R5 ; Repoe o valor da coluna onde escrever
+	ADD R2, 1 ; Muda a linha onde escrever
+loop_desenhar_tetra:
+	ADD R0, 1 ; Acede ao proximo elemento da tabela
+	MOVB R1, [R0] ; R1 com o valor a escrever no ecra
+	AND R1, R1 ; Afeta as flags
+	JZ nao_desenhar0 ; Se for 0 nao desenha
+	CALL desenhar_pixel ; Chama a rotina que desenha 1 pixel da tabela de strings
+nao_desenhar0:
+	ADD R3, 1 ; Muda a coluna onde escrever
+	SUB R6, 1 ; Atualiza o contador de colunas
+	JZ repor_colunas ; Se for 0 repoe as colunas
+	SUB R7, 1 ; Atualiza o contador de elementos da tabela
+	JNZ loop_desenhar_tetra ; Se ainda nao acabou corre outra vez
+fim_desenhar_tetra:
+	POP R8
+	POP R7
+	POP R6
+	POP R5
+	POP R4
+	POP R3
+	POP R2
+	POP R1
+	POP R0
+	RET
 
->>>>>>> 2ae8f85a0097655c9f2c490407d4504828125f55
-	
-fim_des_tetra:
 	
 	
 ; *Entradas:
@@ -678,7 +733,6 @@ ecra_segmentos:             ; Mostra que tecla foi premida, no ecra de segmentos
 	push R0				   	; Guarda registos
 	push R1
 	push R2
-<<<<<<< HEAD
 	mov  R0, local_Segmentos   ; Define endereço de escrita display (0A000H)
 	movb [R0],R1           ; Escrever no display o valor da tecla
 	pop  R2				   ; Retorna registos
@@ -686,17 +740,7 @@ ecra_segmentos:             ; Mostra que tecla foi premida, no ecra de segmentos
 	pop  R0
 	;mov  R6,1			   ; Define um valor que representa que a tecla ja foi representada no ecra
 	ret
-=======
-	;mov  R1, adr_Tecla_Valor        ; Endereço de memória com o valor da tecla
-	movb R2,[R1]           	; Obtem valor da tecla
-	mov  R0, local_Segmentos   ; Define endereço de escrita display (0A000H)
-	movb [R0],R2           	; Escrever no display o valor da tecla
-	pop  R2				   	; Retorna registos
-	pop  R1
-	pop  R0
-	;mov  R6,1			   	; Define um valor que representa que a tecla ja foi representada no ecra
-	jmp  scan_Teclado      	; Volta a varrer o teclado
->>>>>>> 2ae8f85a0097655c9f2c490407d4504828125f55
+
 ; *********************************************************************************
 ; * Rotina que limpa o ecra
 ; *********************************************************************************
@@ -790,13 +834,9 @@ escreve_tabela_ecra:
     PUSH  R1
     PUSH  R2
     PUSH  R3
-<<<<<<< HEAD
-    MOV   R3, local_Ecra          ; Endereço do ecrã
-    ;ADD   R3, R1            ; Actualização do endereço onde começar a escrever
-=======
     MOV   R3, local_Ecra    ; Endereço do ecrã
-    ADD   R3, R1            ; Actualização do endereço onde começar a escrever
->>>>>>> 2ae8f85a0097655c9f2c490407d4504828125f55
+    ;ADD   R3, R1            ; Actualização do endereço onde começar a escrever
+
     MOV   R2, MAX_ELE       ; Número de elementos da tabela de strings
 ciclo_ecra:  
     MOVB  R1, [R0]          ; Elemento actual da tabela de strings
