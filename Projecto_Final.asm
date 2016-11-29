@@ -304,9 +304,9 @@ tab_int:        WORD    int0
 ;PLACE       1500H
 
 tab_estado:
-    WORD  Welcome     	; 0
+    WORD Welcome     	; 0
 	WORD Preparar_jogo	; 1
-	WORD  Jogo 			; 2
+	WORD Jogo 			; 2
 	Word Suspender 		; 3 
 	Word Gameover 		; 4
 	Word About 			; 5
@@ -332,14 +332,14 @@ inicializacao:		     ; Inicializações gerais
 ; * R0 R1
 ; ***********************************************************************
 loop_estados:
-	mov R0, estado_programa ; Fazer comentarios diferentes ; Obter o estado actual
-	movb R1, [R0]
-	shl R1,1  				; Multiplicar por dois visto os endereços de 2 bytes em 2
-	mov   R0, tab_estado    ; Endereço base dos processos do jogo
-    add   R1, R0            ; Agora R0 aponta para a rotina correspondente ao estado actual
-    mov   R0, [R1]          ; Obter o endereço da rotina a chamar
-    call  R0                ; invocar o processo correspondente ao estado
-    jmp   loop_estados      ; loop
+	MOV   R0, estado_programa ; Fazer comentarios diferentes ; Obter o estado actual
+	MOVB  R1, [R0]
+	SHL   R1,1  				; Multiplicar por dois visto os endereços de 2 bytes em 2
+	MOV   R0, tab_estado    ; Endereço base dos processos do jogo
+    ADD   R1, R0            ; Agora R0 aponta para a rotina correspondente ao estado actual
+    MOV   R0, [R1]          ; Obter o endereço da rotina a chamar
+    CALL  R0                ; invocar o processo correspondente ao estado
+    JMP   loop_estados      ; loop
 	
 ; ***********************************************************************
 ; * Welcome
@@ -350,29 +350,29 @@ loop_estados:
 ; ***********************************************************************
 
 Welcome:
-	Push R0
-	Push R1
-	Push R2
-	Push R3
-	mov  R1, 255           ; Corresponde ao valor FF no ecra
-	call ecra_segmentos
-	mov R0, ecra_inicio
-	call escreve_tabela_ecra
+	PUSH R0					; Guarda registos
+	PUSH R1
+	PUSH R2
+	PUSH R3
+	MOV  R1, 255           	; Corresponde ao valor FF no ecra
+	CALL ecra_segmentos
+	MOV R0, ecra_inicio
+	CALL escreve_tabela_ecra
 esperar_tecla:
-	call teclado ;(FAZER MAIS TARDE)
-	mov R0, adr_Tecla_Valor
-	movb R2,[R0]
-	mov R3, tecla_jogar
-	CMP R2, R3 ; tecla c
+	CALL teclado 											;(FAZER MAIS TARDE)
+	MOV R0, adr_Tecla_Valor
+	MOVB R2,[R0]
+	MOV R3, tecla_jogar
+	CMP R2, R3 				; tecla c
 	JNZ esperar_tecla
-	mov R0, estado_programa ; Fazer comentarios diferentes ; Obter o estado actual adrress
-	mov R1, estado_Preparar_jogo  ; 
-	movb [R0], R1
-	pop R3
-	pop R2
-	pop R1
-	pop R0
-	ret
+	MOV R0, estado_programa ; Fazer comentarios diferentes ; Obter o estado actual adrress
+	MOV R1, estado_Preparar_jogo  
+	MOVB [R0], R1
+	POP R3					; Retorna registos
+	POP R2
+	POP R1
+	POP R0
+	RET						; Termina a rotina
 ; *********************************************************************************
 ; * Rotina Suspender
 ; * 
@@ -475,8 +475,8 @@ Preparar_jogo:
 	PUSH R1
 	CALL limpar
 	CALL ecra_linhalateral 	; Chama a rotina para desenhar o limite lateral
-	mov R1,0 				; valor 00 para mostrar no ecra de segmentos
-	call ecra_segmentos
+	MOV R1,0 				; valor 00 para mostrar no ecra de segmentos
+	CALL ecra_segmentos
 	MOV R0, estado_programa ; Move o endereco do estado_programa para R0
 	MOV R1, estado_Jogo 	; Atualiza R1 com o valor do estado jogar
 	MOVB [R0], R1 			; Atualiza o valor do estado_programa para o estado atual (estado jogar)
@@ -495,69 +495,68 @@ Preparar_jogo:
 
 ;####Jogo
 Jogo:
-	PUSH R0
+	PUSH R0					; Guarda registos
 	PUSH R1
 	PUSH R2
 	PUSH R3
 	PUSH R8
-	Push R9
-	mov R1, adr_x
-	mov R0,0
-	mov [R1], R0 			; mete a posicao padrao para ser escrita
-	mov R0,0
-	mov R1, adr_Nr_random
-	mov R0, [R1] 			; Nr aleatorio
-	mov R1, mascara_0_1bits
-	and R0, R1 				; isola os ultimos 2 bits
+	PUSH R9
+	MOV R1, adr_x
+	MOV R0,0
+	MOV [R1], R0 			; mete a posicao padrao para ser escrita
+	MOV R0,0
+	MOV R1, adr_Nr_random
+	MOV R0, [R1] 			; Nr aleatorio
+	MOV R1, mascara_0_1bits
+	AND R0, R1 				; isola os ultimos 2 bits
 select_tetra:
-	mov R1,0 				; valor a saltar na tab tetraminos
+	MOV R1,0 				; valor a saltar na tab tetraminos
 	CMP R0, sequencia_tetraminoI
 	JZ write_tab_tetra
-	add R1,1
+	ADD R1,1
 	CMP R0, sequencia_tetraminoL
 	JZ write_tab_tetra
-	add R1,1
+	ADD R1,1
 	CMP R0, sequencia_tetraminoT
 	JZ write_tab_tetra
-	add R1,1
+	ADD R1,1
 	CMP R0, sequencia_tetraminoS
 	JZ write_tab_tetra
 	
 write_tab_tetra:
-	MOV R8, adr_x ; Atualiza R0 com o valor correspondente a linha inicial onde desenhar o tetramino
-	mov R3, 6
-	MOVB [R8],R3 ; Mete em R2, o valor da linha onde comecar a desenhar
-	MOV R8, adr_y ; Acede a tabela que contem as posicoes 
+	MOV R8, adr_x 			; Atualiza R0 com o valor correspondente a linha inicial onde desenhar o tetramino
+	MOV R3, 6
+	MOVB [R8],R3 			; Mete em R2, o valor da linha onde comecar a desenhar
+	MOV R8, adr_y 			; Acede a tabela que contem as posicoes 
 	MOV R3, 0
-	MOVB [R8], R3 ; Mete em R3, o valor da coluna onde comecar a desenhar	
+	MOVB [R8], R3 			; Mete em R3, o valor da coluna onde comecar a desenhar	
 	
-	mov R2, tetraminos 		; endereco para selecionar tetra
-	shl R1,1 ;multiplica por 2 
-	add R2, R1				; mete o pointer no tetra
-	mov R1, [R2] 			; mete na variavel endereco tabela rotacao de tetra
-	mov R0, adr_tetra_tipo 
-	mov [R0], R1 			; escreve a tabela rotacao de tetra em adr_tetra_tipo
-	mov R0, adr_tetra_rot 	; para registar na memoria o valor inicial da rotacao
-	mov R1, 0H
-
-	mov [R0], R1; rotacao inicial de tetra
-	mov R9,1 ;Modo Escreve
-	call desenhar_tetra
+	MOV R2, tetraminos 		; endereco para selecionar tetra
+	SHL R1,1 				; multiplica por 2 
+	ADD R2, R1				; mete o pointer no tetra
+	MOV R1, [R2] 			; mete na variavel endereco tabela rotacao de tetra
+	MOV R0, adr_tetra_tipo 
+	MOV [R0], R1 			; escreve a tabela rotacao de tetra em adr_tetra_tipo
+	MOV R0, adr_tetra_rot 	; para registar na memoria o valor inicial da rotacao
+	MOV R1, 0H
+	MOV [R0], R1			; rotacao inicial de tetra
+	MOV R9,1 				;Modo Escreve
+	CALL desenhar_tetra
 	EI0
 random_monstro:
-	mov R1, adr_Nr_random
-	mov R0, [R1] 			; Nr aleatorio
-	mov R1, mascara_2_3bits
-	and R0, R1
+	MOV R1, adr_Nr_random
+	MOV R0, [R1] 			; Nr aleatorio
+	MOV R1, mascara_2_3bits
+	AND R0, R1
 	CMP R0, sequencia_monstro
 	;jz criar_monstro
 ;criar_monstro:
 	;DI ;visto que vamos mexer na tabela do tetra mino atual
 	;MOV 
-	mov R0, estado_programa ; Fazer comentarios diferentes ; Obter o estado actual adrress
-	mov R1, estado_Welcome  ; 
-	movb [R0], R1
-	Pop R9
+	MOV R0, estado_programa ; Fazer comentarios diferentes ; Obter o estado actual adrress
+	MOV R1, estado_Welcome  ; 
+	MOVB [R0], R1
+	POP R9
 	POP R8
 	POP R3 
 	POP R2
@@ -580,7 +579,7 @@ random_monstro:
 ; **********************************************************************
 
 desenhar_tetra:
-	PUSH R0
+	PUSH R0						; Guarda registos
 	PUSH R1
 	PUSH R2
 	PUSH R3
@@ -596,49 +595,49 @@ desenhar_tetra:
 	;ADD R0, 1 ; Acede ao proximo elemento da tabela de strings
 	;MOVB R5, [R0] ; R5 com o valor correspondente ao numero de colunas da tabela
 	
-	mov R0, adr_tetra_tipo
-	mov R1,[R0]
-	mov R0, adr_tetra_rot
-	mov R2, [R0]
-	shl R2,1 ; multiplica por 2
-	add R1,R2 ;endereco tabela final
-	mov R0,[R1]
+	MOV R0, adr_tetra_tipo
+	MOV R1,[R0]
+	MOV R0, adr_tetra_rot
+	MOV R2, [R0]
+	SHL R2,1 					; multiplica por 2
+	ADD R1,R2 					; endereco tabela final
+	MOV R0,[R1]
 	;ir buscar x e y do tetramino 
-	movB R4,[R0] ;linha
-	add R0,1 ;adr coluna
-	movb R5,[R0];coluna
+	movB R4,[R0] 				; linha
+	ADD R0,1 					; adr coluna
+	movb R5,[R0]				; coluna
 
-	MOV R8, adr_y ; Atualiza R0 com o valor correspondente a linha inicial onde desenhar o tetramino
-	MOVB R2, [R8] ; Mete em R2, o valor da linha onde comecar a desenhar
-	MOV R8, adr_x ; Acede a tabela que contem as posicoes 
-	MOVB R3, [R8] ; Mete em R3, o valor da coluna onde comecar a desenhar	
+	MOV R8, adr_y 				; Atualiza R0 com o valor correspondente a linha inicial onde desenhar o tetramino
+	MOVB R2, [R8] 				; Mete em R2, o valor da linha onde comecar a desenhar
+	MOV R8, adr_x 				; Acede a tabela que contem as posicoes 
+	MOVB R3, [R8] 				; Mete em R3, o valor da coluna onde comecar a desenhar	
 	
 	
-	MOV R7, R4 ; Duplica o valor das linhas em registo para criar 1 contador
-	MUL R7, R5 ; Multiplica o valor das linhas pelas colunas, para criar 1 contador do numero de elementos da tabela
-	ADD R3, R5 ; Permite repor corretamente os contadores
-	SUB R2, 1 ; Permite repor corretamente os contadores
+	MOV R7, R4 					; Duplica o valor das linhas em registo para criar 1 contador
+	MUL R7, R5 					; Multiplica o valor das linhas pelas colunas, para criar 1 contador do numero de elementos da tabela
+	ADD R3, R5 					; Permite repor corretamente os contadores
+	SUB R2, 1 					; Permite repor corretamente os contadores
 repor_colunas:
-	MOV R6, R5 ; Duplica o valor das colunas em registo para fazer um contador
-	SUB R3, R5 ; Repoe o valor da coluna onde escrever
-	ADD R2, 1 ; Muda a linha onde escrever
+	MOV R6, R5 					; Duplica o valor das colunas em registo para fazer um contador
+	SUB R3, R5 					; Repoe o valor da coluna onde escrever
+	ADD R2, 1 					; Muda a linha onde escrever
 	
 loop_desenhar_tetra:
-	ADD R0, 1 ; Acede ao proximo elemento da tabela
-	MOVB R1, [R0] ; R1 com o valor a escrever no ecra
-	AND R1, R1 ; Afeta as flags
-	JZ nao_desenhar0 ; Se for 0 nao desenha
-	CALL desenhar_pixel ; Chama a rotina que desenha 1 pixel da tabela de strings
+	ADD R0, 1 					; Acede ao proximo elemento da tabela
+	MOVB R1, [R0] 				; R1 com o valor a escrever no ecra
+	AND R1, R1 					; Afeta as flags
+	JZ nao_desenhar0 			; Se for 0 nao desenha
+	CALL desenhar_pixel 		; Chama a rotina que desenha 1 pixel da tabela de strings
 nao_desenhar0:
 	Sub R7,1
-	JZ fim_desenhar_tetra ; Se ainda nao acabou corre outra vez
-	ADD R3, 1 ; Muda a coluna onde escrever
-	SUB R6, 1 ; Atualiza o contador de colunas
-	JZ repor_colunas ; Se for 0 repoe as colunas
+	JZ fim_desenhar_tetra 		; Se ainda nao acabou corre outra vez
+	ADD R3, 1 					; Muda a coluna onde escrever
+	SUB R6, 1 					; Atualiza o contador de colunas
+	JZ repor_colunas 			; Se for 0 repoe as colunas
 	JMP loop_desenhar_tetra
 	
 fim_desenhar_tetra:
-	POP R9
+	POP R9						; Retorna registos
 	POP R8
 	POP R7
 	POP R6
@@ -648,7 +647,7 @@ fim_desenhar_tetra:
 	POP R2
 	POP R1
 	POP R0
-	RET
+	RET							; Termina a rotina
 
 	
 	
@@ -667,105 +666,105 @@ fim_desenhar_tetra:
 ; 
 ; **********************************************************************
 teclado:
-	push r1					; Guarda registos
+	push r1					   	; Guarda registos
 	push r2
 	push r3
 	push r4
 	push R5
 	push R6
 	call definir_Linha
-	pop r6					; Retorna registos
+	pop r6					   	; Retorna registos
 	pop r5
 	pop r4
 	pop r3
 	pop r2
 	pop r1
-definir_Linha:             	; Redifine a linha quando o shr chegar a 0
-	mov  R1, linha         	; Valor maximo das linhas  
-	;mov  R5,OFF            ; Redefine se a tecla esta pressionada, para ser voltada a ser verificada
+definir_Linha:             		; Redifine a linha quando o shr chegar a 0
+	mov  R1, linha         		; Valor maximo das linhas  
+	;mov  R5,OFF            	; Redefine se a tecla esta pressionada, para ser voltada a ser verificada
 
-scan_Teclado:              	; Rotina que lê o teclado 
-	mov  R2, out_Teclado   	; R2 fica com o valor 0C000H(porto de escrita)
-	movb [R2], R1      	   	; Escreve no periférico de saída
-	mov  R2, in_Teclado    	; R2 fica com o valor 0E000H(porto de leitura)
-    movb R3, [R2]      	   	; Lê do periférico de entrada
-    and  R3, R3       	   	; Afecta as flags (movs não afectam as flags)
-    jz   mudar_Linha       	; Se nenhuma foi tecla premida, muda de linha
-    jmp  tecla_Pressionada 	; Caso tecla premida, começa a função
+scan_Teclado:              		; Rotina que lê o teclado 
+	mov  R2, out_Teclado   		; R2 fica com o valor 0C000H(porto de escrita)
+	movb [R2], R1      	   		; Escreve no periférico de saída
+	mov  R2, in_Teclado    		; R2 fica com o valor 0E000H(porto de leitura)
+    movb R3, [R2]      	   		; Lê do periférico de entrada
+    and  R3, R3       	   		; Afecta as flags (movs não afectam as flags)
+    jz   mudar_Linha       		; Se nenhuma foi tecla premida, muda de linha
+    jmp  tecla_Pressionada 		; Caso tecla premida, começa a função
 	
 mudar_Linha:
-	shr  R1,1			   	; Vai alterando a linha a varrer
-	jz   definir_Linha      ; @@@@@@MALLL DESCRICAO Verificar estado da tecla apos varrimento das 4 linhas
-	jmp  scan_Teclado      	; Caso ainda não acabou o varrimento de todas as linhas, fazer scan linha seguite
+	shr  R1,1			   		; Vai alterando a linha a varrer
+	jz   definir_Linha      	; @@@@@@MALLL DESCRICAO Verificar estado da tecla apos varrimento das 4 linhas
+	jmp  scan_Teclado      		; Caso ainda não acabou o varrimento de todas as linhas, fazer scan linha seguite
 	
-;estado_Tecla:              ; Verifica se alguma tecla foi clicada durante o varrimento
-;	and  R5,R5			   	; Afeta as flags
-;	jz   verificar_Ciclo   	; Se tecla nao premida 
-;	mov  R6,1              	; Se uma tecla foi clicada, define um valor que representa q o display_Inativo ainda não correu
+;estado_Tecla:              	; Verifica se alguma tecla foi clicada durante o varrimento
+;	and  R5,R5			   		; Afeta as flags
+;	jz   verificar_Ciclo   		; Se tecla nao premida 
+;	mov  R6,1              		; Se uma tecla foi clicada, define um valor que representa q o display_Inativo ainda não correu
 ;	jmp  definir_Linha
 	
 ;verificar_Ciclo:
-;	and  R6,R6             	; Verifica se o display_Inativo já correu
-;	jnz  display_Inativo   	; Vai mostrar que nenhuma tecla desta linha foi premida
+;	and  R6,R6             		; Verifica se o display_Inativo já correu
+;	jnz  display_Inativo   		; Vai mostrar que nenhuma tecla desta linha foi premida
 ;	mov  R5, OFF
-;	jmp  definir_Linha     	; Verificar se a tecla premida esta na proxima linha
+;	jmp  definir_Linha     		; Verificar se a tecla premida esta na proxima linha
 
-tecla_Pressionada:         	; Verifica qual a tecla premida
-	mov r5, 0 			   	; Redifinir contadores
+tecla_Pressionada:         		; Verifica qual a tecla premida
+	mov r5, 0 			   		; Redifinir contadores
 	mov r6, 0 
 	call linha_Count
 	call coluna_Count
 	call transform_Hex
 	call gravar_Mem_Teclado
-	ret					   	; Termina a rotina
-linha_Count:               	; Ciclo que conta o nº de linhas
+	ret					   		; Termina a rotina
+linha_Count:               		; Ciclo que conta o nº de linhas
 	add  R5,1			   
-	shr  R1,1			   	; Conta o nº de shift ate dar 0
+	shr  R1,1			   		; Conta o nº de shift ate dar 0
 	jnz  linha_Count
-	sub  R5,1 			   	; Fazer o contador comecar em 0
-	ret		               	; Vai para coluna_Count
+	sub  R5,1 			   		; Fazer o contador comecar em 0
+	ret		               		; Vai para coluna_Count
 
-coluna_Count:              	; Ciclo que conta o nº de colunas
+coluna_Count:              		; Ciclo que conta o nº de colunas
 	add  R6,1 			   
-	shr  R3,1			   	; Conta o nº de shift ate dar 0
+	shr  R3,1			   		; Conta o nº de shift ate dar 0
 	jnz  coluna_Count
-	sub  R6,1 			   	; Fazer o contador comecar em 0
+	sub  R6,1 			   		; Fazer o contador comecar em 0
 	ret
 
-transform_Hex:             	; Vai transformar o numero de colunas e linhas no valor do teclado
-	shl  R5,2 			   	; Multiplica por 4,valor a somar a linha
-	add  R6,R5			   	; Valor da tecla em R6
+transform_Hex:             		; Vai transformar o numero de colunas e linhas no valor do teclado
+	shl  R5,2 			   		; Multiplica por 4,valor a somar a linha
+	add  R6,R5			   		; Valor da tecla em R6
 	ret
 
 gravar_Mem_Teclado:
     mov  R4, adr_Tecla_Valor        
-	movb [R4], R6      	   	; Guarda tecla premida na memória de endereço 100H
+	movb [R4], R6      	   		; Guarda tecla premida na memória de endereço 100H
 	ret
 
 ;###########################################################	
 	
-display_Inativo:           	; Ecra mostra que nao ha tecla premida
-	push R0				   	; Guarda registos
+display_Inativo:           		; Ecra mostra que nao ha tecla premida
+	push R0				   		; Guarda registos
 	push R9
-	;mov  R0, local_Segmentos ; Volta ao endereço 0A000H
-	mov  R1, 255           	; Corresponde ao valor FF no ecra
-	movb [R0],R9           	; Escreve no local_Segmentos
-	pop  R9				   	; Retorna registos
+	;mov  R0, local_Segmentos 	; Volta ao endereço 0A000H
+	mov  R1, 255           		; Corresponde ao valor FF no ecra
+	movb [R0],R9           		; Escreve no local_Segmentos
+	pop  R9				   		; Retorna registos
 	pop  R0
-	;mov  R6,0              ; O ciclo do ecra inativo ja foi corrido
+	;mov  R6,0              	; O ciclo do ecra inativo ja foi corrido
 	;mov  R5,OFF; Sem tecla premida
 	jmp  definir_Linha
 ;##### Recebe R1
-ecra_segmentos:             ; Mostra que tecla foi premida, no ecra de segmentos
-	push R0				   	; Guarda registos
+ecra_segmentos:             	; Mostra que tecla foi premida, no ecra de segmentos
+	push R0				   		; Guarda registos
 	push R1
 	push R2
-	mov  R0, local_Segmentos   ; Define endereço de escrita display (0A000H)
-	movb [R0],R1           ; Escrever no display o valor da tecla
-	pop  R2				   ; Retorna registos
+	mov  R0, local_Segmentos   	; Define endereço de escrita display (0A000H)
+	movb [R0],R1           		; Escrever no display o valor da tecla
+	pop  R2				   		; Retorna registos
 	pop  R1
 	pop  R0
-	;mov  R6,1			   ; Define um valor que representa que a tecla ja foi representada no ecra
+	;mov  R6,1			   		; Define um valor que representa que a tecla ja foi representada no ecra
 	ret
 
 ; *********************************************************************************
@@ -773,21 +772,21 @@ ecra_segmentos:             ; Mostra que tecla foi premida, no ecra de segmentos
 ; *********************************************************************************
 
 limpar:
-	PUSH R0 				; Guarda registos
+	PUSH R0 					; Guarda registos
 	PUSH R1 
 	PUSH R2 
-	MOV R0, local_Ecra 		; R0 com o endereco do Ecra
-	MOV R1, 128 			; Valor de bytes totais do ecra
-	MOV R2, 00H 			; Valor que permite limpar todos os bytes do ecra
+	MOV R0, local_Ecra 			; R0 com o endereco do Ecra
+	MOV R1, 128 				; Valor de bytes totais do ecra
+	MOV R2, 00H 				; Valor que permite limpar todos os bytes do ecra
 loop_limpar:
-	MOVb [R0], R2 			; Limpa 1 byte do ecra
-	ADD R0, 1 				; Acede ao byte seguinte do ecra
-	SUB R1, 1 				; Atualiza o contador de bytes
-	JNZ loop_limpar 		; Corre o loop outra vez ate todos os bytes estarem limpos
-	POP R2 					; Retorna registos
+	MOVB [R0], R2 				; Limpa 1 byte do ecra
+	ADD R0, 1 					; Acede ao byte seguinte do ecra
+	SUB R1, 1 					; Atualiza o contador de bytes
+	JNZ loop_limpar 			; Corre o loop outra vez ate todos os bytes estarem limpos
+	POP R2 						; Retorna registos
 	POP R1 
 	POP R0 
-	RET 					; Termina a rotina
+	RET 						; Termina a rotina
 ;############################################################
 ; **********************************************************************
 ; * Desenha Pixel
@@ -801,52 +800,53 @@ loop_limpar:
 ; **********************************************************************
 
 desenhar_pixel:
-    PUSH  R0 ; Guarda R0
-    PUSH  R1 ; Guarda R1
-    PUSH  R2 ; Guarda R2
-    PUSH  R3 ; Guarda R3
-    PUSH  R4 ; Guarda R4
-    PUSH  R5 ; Guarda R5
-    PUSH  R6 ; Guarda R6
-    PUSH  R7 ; Guarda R7
-    PUSH  R8 ; Guarda R8
-	MOV R0, local_Ecra ; Atualiza R0 com o endereco do ecra
-	MOV R4, 4 ; Atualiza R4 com o numero de bytes de cada linha do ecra (linhas)
-	MOV R5, 8 ; Atualiza R5 com o numero de bits por byte do ecra (colunas)
-	MOV R6, 80H ; (10000000) Mascara que permite escrever nas colunas de cada byte atraves de shifts
-	MUL R4, R2 ; Transforma R2 numa linha do ecra
-	ADD R0, R4 ; Acede a linha do ecra onde e suposto escrever
-	MOV R7, R3 ; R7 com o valor da coluna para dividir pelo numero de colunas
-	DIV R7, R5 ; Transforma R7 numa coluna da linha onde escrever
-	ADD R0, R7 ; Acede a coluna onde escrever
-	MOD R3, R5 ; R3 com o bit onde escrever (R3 sera um valor de 0-7 que sao o numero de colunas)
+    PUSH  R0 					; Guarda registos
+    PUSH  R1 
+    PUSH  R2 
+    PUSH  R3 
+    PUSH  R4 
+    PUSH  R5 
+    PUSH  R6 
+    PUSH  R7 
+    PUSH  R8 
+	MOV R0, local_Ecra 			; Atualiza R0 com o endereco do ecra
+	MOV R4, 4 					; Atualiza R4 com o numero de bytes de cada linha do ecra (linhas)
+	MOV R5, 8 					; Atualiza R5 com o numero de bits por byte do ecra (colunas)
+	MOV R6, 80H 				; (10000000) Mascara que permite escrever nas colunas de cada byte atraves de shifts
+	MUL R4, R2 					; Transforma R2 numa linha do ecra
+	ADD R0, R4 					; Acede a linha do ecra onde e suposto escrever
+	MOV R7, R3 					; R7 com o valor da coluna para dividir pelo numero de colunas
+	DIV R7, R5 					; Transforma R7 numa coluna da linha onde escrever
+	ADD R0, R7 					; Acede a coluna onde escrever
+	MOD R3, R5 					; R3 com o bit onde escrever (R3 sera um valor de 0-7 que sao o numero de colunas)
 selecao_pixel:
-	AND R3, R3 ; Afectar as flags
-	JZ escrever_ou_apagar ; Quando for o ultimo bit a verificar salta para decidir se desenha ou apaga
-	SHR R6, 1 ; Atualiza a mascara para o bit seguinte ate ao bit onde e suposto escrever
-	SUB R3, 1 ; Atualiza a coluna (avanca para o proximo bit)
-	JMP selecao_pixel ; Verifica os bits todos de R3
+	AND R3, R3 					; Afectar as flags
+	JZ escrever_ou_apagar 		; Quando for o ultimo bit a verificar salta para decidir se desenha ou apaga
+	SHR R6, 1 					; Atualiza a mascara para o bit seguinte ate ao bit onde e suposto escrever
+	SUB R3, 1 					; Atualiza a coluna (avanca para o proximo bit)
+	JMP selecao_pixel 			; Verifica os bits todos de R3
 escrever_ou_apagar:
-	MOVB R8, [R0] ; Move para R8 o que esta escrito no byte do ecra
-	AND R1, R1 ; Afectar as flags
-	JNZ escrever; Caso seja para escrever salta para escrever
-	NOT R6 ; Nega a mascara para poder apagar o bit
-	AND R8, R6 ; Apaga apenas o bit escolhido
-	JMP fim_desenhar_pixel ; Acaba de desenhar o pixel
+	MOVB R8, [R0] 				; Move para R8 o que esta escrito no byte do ecra
+	AND R1, R1 					; Afectar as flags
+	JNZ escrever				; Caso seja para escrever salta para escrever
+	NOT R6 						; Nega a mascara para poder apagar o bit
+	AND R8, R6 					; Apaga apenas o bit escolhido
+	JMP fim_desenhar_pixel 		; Acaba de desenhar o pixel
 escrever:
-	OR R8, R6 ; Cria a mascara com o bit final a desenhar
+	OR R8, R6 					; Cria a mascara com o bit final a desenhar
 fim_desenhar_pixel:
-	MOVB [R0], R8 ; Escreve no ecra
-    POP R8 ; Devolve R8
-    POP R7 ; Devolve R7
-    POP R6 ; Devolve R6
-    POP R5 ; Devolve R5
-    POP R4 ; Devolve R4
-    POP R3 ; Devolve R3
-    POP R2 ; Devolve R2
-    POP R1 ; Devolve R1
-    POP R0 ; Devolve R0
-    RET ; Termina rotina
+	MOVB [R0], R8 				; Escreve no ecra
+    POP R8 						; Retorna registos
+	POP R1 
+    POP R7 
+    POP R6 
+    POP R5 
+    POP R4 
+    POP R3 
+    POP R2 
+    POP R1 
+    POP R0 
+    RET 						; Termina rotina
 ; **********************************************************************
 ; Escreve Ecrã
 ;   Rotina que desenha uma tabela de strings no ecrã
@@ -857,52 +857,52 @@ fim_desenhar_pixel:
 ;   Nenhuma
 ; *********************************************************************
 escreve_tabela_ecra:     
-    PUSH  R0                ; Guarda registos
+    PUSH  R0                	; Guarda registos
     PUSH  R1
     PUSH  R2
     PUSH  R3
-    MOV   R3, local_Ecra    ; Endereço do ecrã
-    ;ADD   R3, R1            ; Actualização do endereço onde começar a escrever
+    MOV   R3, local_Ecra    	; Endereço do ecrã
+    ;ADD   R3, R1            	; Actualização do endereço onde começar a escrever
 
-    MOV   R2, MAX_ELE       ; Número de elementos da tabela de strings
+    MOV   R2, MAX_ELE       	; Número de elementos da tabela de strings
 ciclo_ecra:  
-    MOVB  R1, [R0]          ; Elemento actual da tabela de strings
-    MOVB  [R3], R1          ; Escreve o elemento da tabela de strings no ecrã
-    ADD   R0, 1             ; Acede ao índice seguinte da tabela de strings
-    ADD   R3, 1             ; Avança para o byte seguinte do ecrã
-    SUB   R2, 1             ; Actualiza o contador
-    JNZ   ciclo_ecra        ; Volta ao ciclo para escrever o que falta
-    POP   R3                ; Recupera registos
+    MOVB  R1, [R0]          	; Elemento actual da tabela de strings
+    MOVB  [R3], R1          	; Escreve o elemento da tabela de strings no ecrã
+    ADD   R0, 1             	; Acede ao índice seguinte da tabela de strings
+    ADD   R3, 1             	; Avança para o byte seguinte do ecrã
+    SUB   R2, 1             	; Actualiza o contador
+    JNZ   ciclo_ecra        	; Volta ao ciclo para escrever o que falta
+    POP   R3                	; Recupera registos
     POP   R2
     POP   R1
     POP   R0
-    RET   					; Termina a rotina
+    RET   						; Termina a rotina
 	
 ; *********************************************************************************
 ; * Rotina que cria o limite lateral do ecra
 ; *********************************************************************************
 
 ecra_linhalateral:
-	PUSH R0 ; Guarda Registos
+	PUSH R0 					; Guarda Registos
 	PUSH R1
 	PUSH R2
 	PUSH R3
-	MOV R0, 32 ; R0 com um contador para ver se todas as linhas estao pintadas
-	MOV R1, 1 ; Valor a escrever
-	MOV R2, 0 ; Linha inicial onde comecar a pintada
+	MOV R0, 32 					; R0 com um contador para ver se todas as linhas estao pintadas
+	MOV R1, 1 					; Valor a escrever
+	MOV R2, 0 					; Linha inicial onde comecar a pintada
 loop_desenharlinha:
-	MOV R3, 12 ; Coluna fixa onde escrever o limite lateral
-	CALL desenhar_pixel ; Rotina que desenha 1 pixel
-	SUB R0, 1 ; Atualiza o contador de linhas
-	JZ fim_linhalateral ; Se ja desenhou todas as linhas acaba
+	MOV R3, 12 					; Coluna fixa onde escrever o limite lateral
+	CALL desenhar_pixel 		; Rotina que desenha 1 pixel
+	SUB R0, 1 					; Atualiza o contador de linhas
+	JZ fim_linhalateral 		; Se ja desenhou todas as linhas acaba
 	ADD R2, 1
-	JMP loop_desenharlinha ; Corre o loop outra vez ate todas as linhas estarem pintadas
+	JMP loop_desenharlinha 		; Corre o loop outra vez ate todas as linhas estarem pintadas
 fim_linhalateral:
-	POP R3 ; Devolve Registos
+	POP R3 						; Devolve Registos
 	POP R2
 	POP R1
 	POP R0
-	RET ; Termina a rotina
+	RET 						; Termina a rotina
 	
 ; **********************************************************************
 ; Inverte Ecrã
@@ -913,22 +913,22 @@ fim_linhalateral:
 ;   Nenhuma
 ; **********************************************************************
 inverte_ecra:
-    PUSH  R0               	; Guarda registos
+    PUSH  R0               		; Guarda registos
     PUSH  R1
     PUSH  R2
-    MOV   R0, local_Ecra   	; Endereço do ecrã
-    MOV   R1, MAX_ECRA     	; Contador de bytes do ecrã
+    MOV   R0, local_Ecra   		; Endereço do ecrã
+    MOV   R1, MAX_ECRA     		; Contador de bytes do ecrã
 ciclo_inverte:
-    MOVB  R2, [R0]         	; Obtem o byte actual do ecrã
-    NOT   R2               	; Inverte o conteúdo do byte actual
-    MOVB  [R0], R2         	; Coloca no ecrã o inverso do que estava escrito anteriormente
-    ADD   R0, 1            	; Avança para o byte seguinte
-    SUB   R1, 1            	; Actualiza o contador
-    JNZ   ciclo_inverte    	; Enquanto que o contador for diferente de 0 tem que percorrer o ecrã
-    POP   R2               	; Recupera registos
+    MOVB  R2, [R0]         		; Obtem o byte actual do ecrã
+    NOT   R2               		; Inverte o conteúdo do byte actual
+    MOVB  [R0], R2         		; Coloca no ecrã o inverso do que estava escrito anteriormente
+    ADD   R0, 1            		; Avança para o byte seguinte
+    SUB   R1, 1            		; Actualiza o contador
+    JNZ   ciclo_inverte    		; Enquanto que o contador for diferente de 0 tem que percorrer o ecrã
+    POP   R2               		; Recupera registos
     POP   R1
     POP   R0
-    RET                   	; Termina rotina
+    RET                   		; Termina rotina
 	
 ; **********************************************************************
 ; Pausa
@@ -939,12 +939,12 @@ ciclo_inverte:
 ;   Nenhuma
 ; **********************************************************************
 pausa:
-    PUSH  R0                ; Guarda registos
-    MOV   R0, 5000          ; R0 com um valor grande para fazer uma contagem decrescente, apenas para fazer uma pausa entre rotinas
+    PUSH  R0                	; Guarda registos
+    MOV   R0, 5000          	; R0 com um valor grande para fazer uma contagem decrescente, apenas para fazer uma pausa entre rotinas
 ciclo_pausa:
-    SUB   R0, 1             ; Subtrai R0 
-    JNZ   ciclo_pausa       ; Enquanto não for 0 continua a subtrair
-    POP   R0                ; Recupera registos
+    SUB   R0, 1             	; Subtrai R0 
+    JNZ   ciclo_pausa       	; Enquanto não for 0 continua a subtrair
+    POP   R0                	; Recupera registos
     RET
 ; **********************************************************************
 ; Numeros aleatorio
@@ -956,15 +956,15 @@ ciclo_pausa:
 ; **********************************************************************
 
 random:
-	push R0					; Guarda registos
-	push R1
-	mov R0, adr_Nr_random
-	mov R1, [R0]
-	add R1,1
-	mov [R0],R1
-	Pop R1					; Recupera registos
-	pop R0
-	RET						; Termina a rotina
+	PUSH R0						; Guarda registos
+	PUSH R1
+	MOV R0, adr_Nr_random
+	MOV R1, [R0]
+	ADD R1,1
+	MOV [R0],R1
+	POP R1						; Recupera registos
+	POP R0
+	RET							; Termina a rotina
 
 	
 ; **********************************************************************
@@ -976,7 +976,7 @@ random:
 ;   Nenhuma
 ; **********************************************************************
 int0:
-	call random 			;Criar numeros aleatorio
+	CALL random 				; Criar numeros aleatorios
 	RFE
 ; **********************************************************************
 ; Interrupçao 1
