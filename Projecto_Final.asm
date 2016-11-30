@@ -21,7 +21,8 @@
 ;
 teclado_Jumper_FLAG			EQU 1470H
 Flag_Pausa_Display			EQU 1480h ;Saber se e para criar um novo tetramino
-adr_Tecla_Valor         EQU 1400H	 ; Endereço de memória onde se guarda a tecla premida
+Flag_Tecla_Pressionada 		EQU 1486H ;De modo a permitir uma rotina correr apenas 1 vez numa funcao
+adr_Tecla_Valor         EQU 1490H	 ; Endereço de memória onde se guarda a tecla premida
 adr_Nr_random 			EQU 1410H
 adr_x					EQU 1420H  	 ; linha
 adr_y					EQU 1430H    ; coluna
@@ -59,6 +60,8 @@ mascara_0_1bits 		EQU 3H
 mascara_2_3bits 		EQU 0CH
 mascara_bit0			EQU 1H
 mascara_bit1			EQU 2H
+mascara_bit2			EQU 4H
+mascara_bits_0_3		EQU 0FH
 sequencia_tetraminoI 	EQU 00H
 sequencia_tetraminoL 	EQU 01H
 sequencia_tetraminoT 	EQU 02H
@@ -317,10 +320,10 @@ tab_int:        WORD    int0
 ;PLACE       1500H
 
 tab_estado:
-    WORD  Welcome     	; 0
+    WORD Welcome     	; 0
 	WORD Preparar_jogo	; 1
 	WORD Criar_tetra    ; 2
-	WORD  Jogo 			; 3
+	WORD Jogo 			; 3
 	Word Suspender 		; 4 
 	Word Gameover 		; 5
 	Word About 			; 6
@@ -444,6 +447,7 @@ terminar:
 	MOV R1, estado_programa ; Atualiza R1 com o endereco do estado programa
 	MOV [R1], R2 			; Atualiza o estado programa com o valor do estado atual (estado terminar)
 sair_about:
+	POP R3
 	POP R2 					; Retorna registos
 	POP R1 
 	POP R0 
@@ -581,7 +585,7 @@ random_monstro:
 	and R0, R1
 	CMP R0, sequencia_monstro
 	jz criar_monstro
-	jmp esperar_tecla_jogo
+	jmp fim_Criar_Tetra
 criar_monstro:
 	;DI ;visto que vamos mexer na tabela do tetra mino atual
 	MOV R0, adr_x_monstro
@@ -590,6 +594,8 @@ criar_monstro:
 	MOV R9,1
 	call desenhar_monstro
 	EI1
+	jmp fim_Criar_Tetra
+fim_Criar_Tetra:
 	MOV R0, estado_programa ; Meter em R0 o endereco do estado_programa
 	MOV R1, estado_Jogo ; Meter em R1 o valor do estado suspender 
 	MOVB [R0], R1 ; Mover para o estado_programa o estado atual
@@ -600,11 +606,16 @@ criar_monstro:
 	POP R1
 	POP R0
 	RET
-
 ; *********************************************************************************
 ; * Rotina que permite jogar
 ; *********************************************************************************
 Jogo:
+	PUSH R0
+	PUSH R1
+	PUSH R2 
+	PUSH R3
+	PUSH R8
+	PUSH R9
 esperar_tecla_jogo:
 	CALL teclado ; Chama a rotina do teclado e devolve uma tecla em memoria
 	MOV R0, adr_Tecla_Valor ; Vai buscar para R0 o endereco onde esta a tecla carregada
@@ -619,7 +630,7 @@ esperar_tecla_jogo:
 verif_tecla_terminar:
 	MOV R3, tecla_terminar ; R3 com o valor da tecla de terminar
 	CMP R2, R3 ; Verifica se e a tecla de terminar
-	JNZ esperar_tecla_jogo ; Se nao for espera por uma nova tecla	
+	JNZ verif_tecla_suspender ; Se nao for espera por uma nova tecla	
 	MOV R0, estado_programa ; Meter em R0 o endereco do estado_programa
 	MOV R1, estado_Gameover  ; Meter em R1 o valor do estado gameover
 	MOVB [R0], R1 ; Mover para o estado_programa o estado atual
@@ -825,34 +836,55 @@ teclado:
 	push r4
 	push R5
 	push R6
+	push R8
+
 	call definir_Linha
+	pop R8
 	pop r6					; Retorna registos
 	pop r5
 	pop r4
 	pop r3
 	pop r2
 	pop r1
+	
+;definir_
 definir_Linha:             	; Redifine a linha quando o shr chegar a 0
 	call random 			;Criar numeros aleatorios
 	MOV  R1, linha         	; Valor maximo das linhas  
 	MOV R2,teclado_Jumper_FLAG
 	MOV R3,[R2]
-	AND R3,R3
-	JNZ Jumper_FLAG
+	AND R3,R3   ;Se existe valor no Jumper_Flag
+	JNZ call_Jumper_Flag ;vai chamar a rotina que vai lidar com as flags
+	jmp scan_Teclado
+	
+call_Jumper_Flag:
+	call Jumper_FLAG
+	jmp definir_Linha
+	
 scan_Teclado:              	; Rotina que lê o teclado 
+
 	MOV  R2, out_Teclado   	; R2 fica com o valor 0C000H(porto de escrita)
 	MOVb [R2], R1      	   	; Escreve no periférico de saída
 	MOV  R2, in_Teclado    	; R2 fica com o valor 0E000H(porto de leitura)
     MOVb R3, [R2]      	   	; Lê do periférico de entrada
-    and  R3, R3       	   	; Afecta as flags (MOVs não afectam as flags)
+	
+	MOV R8, 0FH
+	
+    and  R3, R8      	   	; Isola apenas os bits do teclado com a mascara_bits_0_3
     jz   mudar_Linha       	; Se nenhuma foi tecla premida, muda de linha
     jmp  tecla_Pressionada 	; Caso tecla premida, começa a função
 	
 mudar_Linha:
 	shr  R1,1			   	; Vai alterando a linha a varrer
-	jz   definir_Linha      ; @@@@@@MALLL DESCRICAO Verificar estado da tecla apos varrimento das 4 linhas
+	jz   alterar_Flag_T_Press      ; @@@@@@MALLL DESCRICAO Verificar estado da tecla apos varrimento das 4 linhas
 	jmp  scan_Teclado      	; Caso ainda não acabou o varrimento de todas as linhas, fazer scan linha seguite
+
 	
+alterar_Flag_T_Press:
+	MOV R3, Flag_Tecla_Pressionada
+	MOV R2,0 ;Definir tecla nao clicada
+	MOV [R3],R2
+	jmp definir_Linha
 ;estado_Tecla:              ; Verifica se alguma tecla foi clicada durante o varrimento
 ;	and  R5,R5			   	; Afeta as flags
 ;	jz   verificar_Ciclo   	; Se tecla nao premida 
@@ -943,6 +975,9 @@ Jumper_FLAG:
 	MOV R4, mascara_bit1 ;vai buscar o bit 1
 	AND R4,R3
 	JNZ call_mover_monstro; que representa a flag do descer_tetra
+	MOV R4, mascara_bit2 ;vai buscar o bit 1
+	AND R4,R3
+	JNZ clear_flag_tecla; que representa a flag de que uma tecla esta presisonada
 	jmp fim_JUMPER
 	
 call_mover_monstro:
@@ -953,12 +988,14 @@ call_descer_tetra:
 	CLR R3,0
 	call descer_tetra
 	jmp fim_JUMPER
+clear_flag_tecla:
+	CLR R3,2
 fim_JUMPER:
 	mov [R2],R3
 	POP R4
 	POP R3
 	POP R2
-	jmp definir_Linha
+	ret
 ; *********************************************************************************
 ; * Rotina que limpa o ecra
 ; *********************************************************************************
@@ -1183,6 +1220,16 @@ rodar_tetra:
 	push R1
 	push R2
 	push R9
+	
+	
+	MOV R0,Flag_Tecla_Pressionada 
+	mov R1,[R0]
+	AND R1,R1  ;ve se ja corremos esta rotina atravez da flag
+	JNZ fim_rot_tetra
+	MOV R1,1 ;Definir tecla como clicada
+	MOV [R0],R1
+
+	
 	mov R9,0 ;apagar posicao atual tetra
 	call desenhar_tetra
 	
@@ -1201,11 +1248,12 @@ set_rot_tetra:
 	MOV [R0],R1
 	MOV R9,1 ;MODO escrever peca
 	CALL desenhar_tetra
+fim_rot_tetra:
 	pop R9
 	pop R2
 	pop R1
 	pop R0
-	
+	ret
 	
 	
 	
@@ -1243,7 +1291,7 @@ descer_tetra:
 ;   R10 - 1:se pode desenhar 0:se n pode
 ; **********************************************************************
 
-<<<<<<< HEAD
+
 verificar_pixel:
     PUSH  R0 ; Guarda R0
     PUSH  R1 ; Guarda R1
@@ -1284,12 +1332,7 @@ fim_verificar_pixel:
     POP R1 ; Devolve R1
     POP R0 ; Devolve R0
     RET ; Termina rotina
-=======
-verificar_se_desenha_pixel:
-	push R0
-	push R1
-	
->>>>>>> 330b2324b548e6fcd99e5c4edbc4c6795a701a4b
+
 	
 ; **********************************************************************
 ; Interrupçao 0
@@ -1304,7 +1347,6 @@ mover_monstro:
 	push R1
 	push R2
 	push R9
-	
 	mov R9,0 ;apagar posicao atual tetra
 	call desenhar_monstro
 	mov R0, adr_x_monstro
