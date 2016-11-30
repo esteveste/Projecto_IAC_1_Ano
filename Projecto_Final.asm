@@ -26,6 +26,8 @@ adr_Tecla_Valor         EQU 1490H	 ; Endereço de memória onde se guarda a tecl
 adr_Nr_random 			EQU 1410H
 adr_x					EQU 1420H  	 ; linha
 adr_y					EQU 1430H    ; coluna
+adr_x_teste				EQU 1426H  	 ; linha
+adr_y_teste				EQU 1436H    ; coluna
 adr_x_monstro			EQU 1440H
 const_y_monstro 		EQU 24
 adr_tetra_tipo			EQU 1450H  
@@ -36,8 +38,8 @@ linha	                EQU 8H       ; Posição do bit correspondente à linha a 
 local_Segmentos	        EQU 0A000H 	 ; Endereco do display de 7 segmentos
 out_Teclado	            EQU 0C000H   ; Endereço do porto de escrita do teclado
 in_Teclado		        EQU 0E000H   ; Endereço do porto de leitura do teclado
-MAX_ECRA                EQU 128H     ; Número de bytes do ecrã
-MAX_ELE 	            EQU 128
+elem_Ecra                EQU 128H     ; Número de bytes do ecrã
+elem_tabelas 	            EQU 128
 tecla_pausa             EQU 0CH
 tecla_about             EQU 0AH
 tecla_terminar          EQU 0EH
@@ -654,14 +656,14 @@ verif_tecla_direita:
 	CMP R2, R3 ; Verifica se e a tecla de mover para a direita
 	JNZ verif_tecla_esquerda ; Se nao for verifica se e a de mover para a esquerda
 	MOV R9, 1 ; R9 vai ser recebido pela rotina de mover o tetramino (1 - direita)
-	;CALL mover_tetramino ; Chama a rotina que move o tetramino
+	CALL mover_tetramino ; Chama a rotina que move o tetramino
 	JMP esperar_tecla_jogo ; Volta a esperar por uma tecla
 verif_tecla_esquerda:
 	MOV R3, tecla_esquerda ; R3 com o valor da tecla para mover a esquerda
 	CMP R2, R3 ; Verifica se e a tecla de mover para a esquerda
 	JNZ verif_tecla_descer ; Se nao for verifica se e a tecla de descer a peca
 	MOV R9, 0 ; R9 vai ser recebido pela rotina de mover o tetramino (0 - esquerda)
-	;CALL mover_tetramino ; Chama a rotina que move o tetramino
+	CALL mover_tetramino ; Chama a rotina que move o tetramino
 	JMP esperar_tecla_jogo ; Volta a esperar por uma tecla
 verif_tecla_descer:
 	MOV R3, tecla_descer ; R3 com o valor da tecla para descer
@@ -1122,7 +1124,7 @@ escreve_tabela_ecra:
     ;ADD   R3, R1            ; Actualização do endereço onde começar a escrever
 	MOV R1,Flag_Pausa_Display ;;Vai ver se o ecra q vamos apresentar vai usar a pausa
 	MOV R4,[R1]
-    MOV   R2, MAX_ELE       ; Número de elementos da tabela de strings
+    MOV   R2, elem_tabelas       ; Número de elementos da tabela de strings
 	
 verificar_pausa_ecra:
 	AND R4,R4
@@ -1186,7 +1188,7 @@ inverte_ecra:
     PUSH  R1
     PUSH  R2
     MOV   R0, local_Ecra   	; Endereço do ecrã
-    MOV   R1, MAX_ECRA     	; Contador de bytes do ecrã
+    MOV   R1, elem_Ecra     	; Contador de bytes do ecrã
 ciclo_inverte:
     MOVB  R2, [R0]         	; Obtem o byte actual do ecrã
     NOT   R2               	; Inverte o conteúdo do byte actual
@@ -1297,14 +1299,34 @@ descer_tetra:
 	push R1
 	push R9
 	
+
 	mov R9,0 ;apagar posicao atual tetra
 	call desenhar_tetra
+
+	mov R0, adr_x
+	mov R9, adr_x_teste
+	movb R1,[R0]
+	movb [R9],R1
+	
 	mov R0, adr_y
+	mov R9, adr_y_teste
 	movb R1,[R0]
 	add R1,1
+	movb [R9],R1
+	
 	movb [R0],R1
+	
+	call verifica_desenhar
+	AND R10,R10
+	JZ fim_descer	
+	
+	
+	
+	movb [R0],R1
+	
 	mov R9,1
 	call desenhar_tetra
+fim_descer:	
 	pop R9
 	pop R1
 	pop R0
@@ -1314,7 +1336,9 @@ descer_tetra:
 ; Pausa
 ;   Rotina que faz uma pausa.
 ; Entradas:
-;   Nenhuma
+; *  R1 - Valor a escrever (1 ou 0)
+; *  R2 - Linha onde escrever
+; *  R3 - Coluna onde escrever
 ; Saidas:
 ;   R10 - 1, se pode desenhar 0, se n pode
 ; **********************************************************************
@@ -1350,10 +1374,10 @@ verif_pintado:
 	MOVB R8, [R0] ; Move para R8 o que esta escrito no byte do ecra
 	AND R8, R6 ; Apaga apenas o bit escolhido
 	JNZ pode_pintar
-	MOV R10, 0
+	MOV R10, 1
 	JMP fim_verificar_pixel
 pode_pintar:
-	MOV R10, 1
+	MOV R10, 0
 fim_verificar_pixel:
     POP R8 ; Devolve R8
     POP R7 ; Devolve R7
@@ -1365,9 +1389,7 @@ fim_verificar_pixel:
     POP R1 ; Devolve R1
     POP R0 ; Devolve R0
     RET ; Termina rotina
-<<<<<<< HEAD
 
-=======
 	
 ; **********************************************************************
 ; Rotina Verifica Desenhar
@@ -1388,7 +1410,7 @@ verifica_desenhar:
     PUSH  R6 ; Guarda R6
     PUSH  R7 ; Guarda R7
     PUSH  R8 ; Guarda R8
-	PUSH  R10
+
 	MOV R0, adr_tetra_tipo
 	MOV R1,[R0]
 	MOV R0, adr_tetra_rot
@@ -1403,7 +1425,18 @@ verifica_desenhar:
 	MOV R8, adr_y_teste ; Atualiza R0 com o valor correspondente a linha inicial onde desenhar o tetramino
 	MOVB R2, [R8] ; Mete em R2, o valor da linha onde comecar a desenhar
 	MOV R8, adr_x_teste ; Acede a tabela que contem as posicoes 
-	MOVB R3, [R8] ; Mete em R3, o valor da coluna onde comecar a desenhar	
+	MOVB R3, [R8] ; Mete em R3, o valor da coluna onde comecar a desenhar
+	MOV R8, 12 ; Valor limite nas colunas
+	MOV R7, R3 ; Duplica o valor das colunas para testar
+	ADD R7, R5 ; Adiciona a coluna a testar o numero de colunas da tabela
+	CMP R8, R7 ; Se for igual nao desenha
+	JZ nao_pode ; Salta para nao desenhar
+	MOV R8, 0 ; Valor limite nas colunas
+	CMP R8, R3 ; Se for igual nao desenha
+	JZ nao_pode ; Salta para nao desenhar
+	MOV R8, 32 ; Valor limite das linhas
+	CMP R8, R2 ; Se for igual nao desenha
+	JZ nao_pode ; Salta para nao desenhar
 	MOV R7, R4 ; Duplica o valor das linhas em registo para criar 1 contador
 	MUL R7, R5 ; Multiplica o valor das linhas pelas colunas, para criar 1 contador do numero de elementos da tabela
 	ADD R3, R5 ; Permite repor corretamente os contadores
@@ -1417,6 +1450,7 @@ loop_testar_tetra:
 	MOVB R1, [R0] ; R1 com o valor a escrever no ecra
 	AND R1, R1 ; Afeta as flags
 	JZ nao_testar ; Se for um 0 nao testa
+	MOV R1,1
 	CALL verificar_pixel ; Chama a rotina que verifica 1 pixel da tabela de strings, e ve se esta desenhado ou nao
 	AND R10, R10
 	JZ nao_pode
@@ -1433,7 +1467,7 @@ nao_pode:
 pode:
 	MOV R10, 1
 fim_verifica_desenhar:
-	POP R10
+	
     POP R8 ; Devolve R8
     POP R7 ; Devolve R7
     POP R6 ; Devolve R6
@@ -1444,7 +1478,7 @@ fim_verifica_desenhar:
     POP R1 ; Devolve R1
     POP R0 ; Devolve R0
     RET ; Termina rotina
->>>>>>> 63feb3143ab3a47339004c274e62b0c67bf73392
+
 	
 ; **********************************************************************
 ; Interrupçao 0
@@ -1480,6 +1514,90 @@ monstro_fim:
 	pop R1
 	pop R0
 	ret
+; *********************************************************************************
+; * Mover Tetramino
+; * Recebe da Memoria:
+; * 	///R0 - tabela
+; * 	R9 - 1 Direita, 0 Esquerda
+; * Saidas:
+; * 	
+; *********************************************************************************
+
+mover_tetramino:
+	PUSH R0
+	PUSH R1
+	PUSH R2
+	PUSH R3
+	PUSH R4
+	PUSH R5
+	PUSH R6
+	PUSH R9
+	
+	
+	MOV R0,Flag_Tecla_Pressionada 
+	mov R1,[R0]
+	AND R1,R1  ;ve se ja corremos esta rotina atravez da flag
+	JNZ fim_mover_tetra
+	MOV R1,1 ;Definir tecla como clicada
+	MOV [R0],R1
+	
+	
+	MOV R0, adr_tetra_tipo
+	MOV R1,[R0]
+	MOV R0, adr_tetra_rot
+	MOV R2, [R0]
+	shl R2,1 ; multiplica por 2
+	add R1,R2 ;endereco tabela final
+	MOV R0,[R1]
+	
+
+	;mov R6, adr_x
+	;movb R3,[R6]
+	;add R3,1
+	;movb [R6],R1
+	
+	MOV R6, adr_x ; Acede a tabela que contem as posicoes 
+	MOVB R3, [R6] ; Mete em R3, o valor da coluna onde comecar a desenhar
+	
+	AND R9,R9
+	JZ esquerda
+	
+direita:
+	ADD R3, 1 ; Adidicona 1 ao valor da coluna para mover para a direita
+	JMP mover ; Salta para concluir o movimento
+esquerda:
+	SUB R3, 1 ; Subtrai 1 para mover para a esquerda
+mover:
+	MOV R9, 0 ; Mete em R9 1 valor para decidir de desenha ou apaga, se 1 escreve se 0 apaga
+	CALL desenhar_tetra
+	
+	
+	
+	
+	;MOVB R4, [R0] ; R4 com o valor correspondente ao numero de linhas da tabela
+	;ADD R0, 1 ; Acede ao proximo elemento da tabela de strings
+	;MOVB R5, [R0] ; R5 com o valor correspondente ao numero de colunas da tabela
+	
+	
+	CALL verifica_desenhar ; Chama a rotina que verifica se pode desenhar, se R11 for 0 nao pode, se for 1 pode
+	AND R10, R10 ; (O registo depende da funcao verifica_desenhar)
+	JZ fim_mover_tetra ; Se nao poder desenhar acaba
+	
+	
+	MOVb [R6],R3
+	
+fim_mover_tetra:
+	MOV R9, 1 ; Mete em R9 1 valor para decidir de desenha ou apaga, se 1 escreve se 0 apaga
+	CALL desenhar_tetra
+	POP R9
+	POP R6
+	POP R5
+	POP R4
+	POP R3
+	POP R2
+	POP R1
+	POP R0
+	RET
 ; **********************************************************************
 ; Interrupçao 0
 ;   Rotina que faz uma pausa.
