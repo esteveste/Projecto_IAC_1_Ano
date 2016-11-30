@@ -346,13 +346,13 @@ inicializacao:		     ; Inicializações gerais
 ; ***********************************************************************
 loop_estados:
 	MOV R0, estado_programa ; Fazer comentarios diferentes ; Obter o estado actual
-	MOVb R1, [R0]
-	shl R1,1  				; Multiplicar por dois visto os endereços de 2 bytes em 2
+	MOVB R1, [R0]
+	SHL R1,1  				; Multiplicar por dois visto os endereços de 2 bytes em 2
 	MOV   R0, tab_estado    ; Endereço base dos processos do jogo
-    add   R1, R0            ; Agora R0 aponta para a rotina correspondente ao estado actual
+    ADD   R1, R0            ; Agora R0 aponta para a rotina correspondente ao estado actual
     MOV   R0, [R1]          ; Obter o endereço da rotina a chamar
     CALL  R0                ; invocar o processo correspondente ao estado
-    jmp   loop_estados      ; loop
+    JMP   loop_estados      ; loop
 	
 ; ***********************************************************************
 ; * Welcome
@@ -1264,9 +1264,8 @@ descer_tetra:
 	RET
 
 ; **********************************************************************
-<<<<<<< HEAD
-; Mover Monstro
-=======
+; Verificar 1 Pixel
+; 	Rotina que le um pixel e ve se esta escrito
 ; Pausa
 ;   Rotina que faz uma pausa.
 ; Entradas:
@@ -1275,14 +1274,11 @@ descer_tetra:
 ;   R10 - 1:se pode desenhar 0:se n pode
 ; **********************************************************************
 
-verificar_se_desenha_pixel:
-	push R0
-	push R1
-	
+verificar_pixel:
+
 	
 ; **********************************************************************
 ; Interrupçao 0
->>>>>>> 47a0e6d2091d7c54768bc39643a0e916a1c6b4a2
 ;   Rotina que faz uma pausa.
 ; Entradas:
 ;  
