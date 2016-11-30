@@ -377,7 +377,7 @@ Welcome:
 	MOV R0, ecra_inicio
 	call escreve_tabela_ecra
 esperar_tecla:
-	call teclado ;(FAZER MAIS TARDE)
+	call teclado ;
 	MOV R0, adr_Tecla_Valor
 	MOVb R2,[R0]
 	MOV R3, tecla_jogar
@@ -411,10 +411,8 @@ ciclo_suspender:
     MOV   R2, estado_Jogo		; Atualiza R2 com o novo estado (estado jogar)
     MOV   R1, estado_programa ; Mete em R1, o endereco do estado_programa
     MOVB  [R1], R2 			; Atualiza o estado_programa com o novo estado
-	;EI1 ; Liga as interrupcoes
-    ;EI0 talvez desnecessario
-    EI
     CALL inverte_ecra       ; Chama a rotina que inverte o ecra para criar um efeito visual
+	EI
 	POP R3 
     POP R2 					; Retorna registos
     POP R1 
@@ -455,8 +453,7 @@ sair_about:
 	POP R0 
 	RET 					; Termina a rotina
 ; *********************************************************************************
-; * Rotina Game Over(MAL FEITA EMANDAR, TEM DE SE IR A MEMORIA BUSCAR O VALOR DA TECLA)
-; * R1 sera a tecla recebida por esperar tecla, como nao sabia qual seria o registo da tecla usei R1
+; * Rotina Game Over
 ; *********************************************************************************
 
 Gameover:
@@ -1045,7 +1042,7 @@ loop_limpar:
 	POP R1 
 	POP R0 
 	RET 					; Termina a rotina
-;############################################################
+
 ; **********************************************************************
 ; * Desenha Pixel
 ; *  Desenha ou apaga um pixel no ecrã com base nas linhas e colunas
@@ -1237,7 +1234,7 @@ random:
 	pop R0
 	RET						; Termina a rotina
 ; **********************************************************************
-; Interrupçao 0
+; Rodar tetramino
 ;   Rotina que faz uma pausa.
 ; Entradas:
 ;  none
@@ -1287,7 +1284,7 @@ fim_rot_tetra:
 	
 	
 ; **********************************************************************
-; Interrupçao 0
+; Descer Tetramino
 ;   Rotina que faz uma pausa.
 ; Entradas:
 ;  
@@ -1333,7 +1330,7 @@ fim_descer:
 	ret
 	
 ; **********************************************************************
-; Pausa
+; Verificar Pixel
 ;   Rotina que faz uma pausa.
 ; Entradas:
 ; *  R1 - Valor a escrever (1 ou 0)
@@ -1373,10 +1370,10 @@ selecao_pixel0:
 verif_pintado:
 	MOVB R8, [R0] ; Move para R8 o que esta escrito no byte do ecra
 	AND R8, R6 ; Apaga apenas o bit escolhido
-	JNZ pode_pintar
+	JNZ nao_pode_pintar
 	MOV R10, 1
 	JMP fim_verificar_pixel
-pode_pintar:
+nao_pode_pintar:
 	MOV R10, 0
 fim_verificar_pixel:
     POP R8 ; Devolve R8
