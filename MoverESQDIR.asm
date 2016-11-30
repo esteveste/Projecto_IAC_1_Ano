@@ -18,6 +18,7 @@ mover_tetramino:
 	PUSH R4
 	PUSH R5
 	PUSH R6
+	PUSH R9
 	MOV R6, adr_x ; Atualiza R0 com o valor correspondente a linha atual onde desenhar o tetramino
 	MOVB R2, [R6] ; Mete em R2, o valor da linha onde comecar a desenhar
 	MOV R6, adr_y ; Acede a tabela que contem as posicoes 
@@ -39,6 +40,7 @@ mover:
 	MOV R9, 1 ; Mete em R9 1 valor para decidir de desenha ou apaga, se 1 escreve se 0 apaga
 	CALL desenhar_tetra
 fim_mover_tetra:
+	POP R9
 	POP R6
 	POP R5
 	POP R4
