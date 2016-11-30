@@ -690,30 +690,34 @@ desenhar_monstro:
 	PUSH R6
 	PUSH R7
 	PUSH R8
-	PUSH R9
-
 	;MOV R0, tabelatetramino ; R0 com a tabela de strings correspondente a variante de tetramino a desenhar
 	;MOVB R4, [R0] ; R4 com o valor correspondente ao numero de linhas da tabela
 	;ADD R0, 1 ; Acede ao proximo elemento da tabela de strings
 	;MOVB R5, [R0] ; R5 com o valor correspondente ao numero de colunas da tabela
-	
 	MOV R0, monstro
 	;ir buscar x e y do tetramino 
 	MOVB R4,[R0] ;linha
 	add R0,1 ;adr coluna
 	MOVb R5,[R0];coluna
-
-	
 	MOV R2, const_y_monstro ;usa a constante da linha do monstro
 	MOV R8, adr_x_monstro ; Acede a tabela que contem as posicoes 
 	MOVB R3, [R8] ; Mete em R3, o valor da coluna onde comecar a desenhar	
-	
-	
 	MOV R7, R4 ; Duplica o valor das linhas em registo para criar 1 contador
 	MUL R7, R5 ; Multiplica o valor das linhas pelas colunas, para criar 1 contador do numero de elementos da tabela
 	ADD R3, R5 ; Permite repor corretamente os contadores
 	SUB R2, 1 ; Permite repor corretamente os contadores
-	jmp repor_colunas
+	CALL completar_desenho ; Chama a rotina que conclui o desenho
+	POP R8
+	POP R7
+	POP R6
+	POP R5
+	POP R4
+	POP R3
+	POP R2
+	POP R1
+	POP R0
+	RET
+	
 ;;Recebe nada	(memoria, adr_tetra_tipo adr_tetra_rot)
 ; **********************************************************************
 ; * Desenha Tetramino
@@ -739,14 +743,10 @@ desenhar_tetra:
 	PUSH R6
 	PUSH R7
 	PUSH R8
-	PUSH R9
-
 	;MOV R0, tabelatetramino ; R0 com a tabela de strings correspondente a variante de tetramino a desenhar
 	;MOVB R4, [R0] ; R4 com o valor correspondente ao numero de linhas da tabela
 	;ADD R0, 1 ; Acede ao proximo elemento da tabela de strings
 	;MOVB R5, [R0] ; R5 com o valor correspondente ao numero de colunas da tabela
-	
-	
 	MOV R0, adr_tetra_tipo
 	MOV R1,[R0]
 	MOV R0, adr_tetra_rot
@@ -758,17 +758,47 @@ desenhar_tetra:
 	MOVB R4,[R0] ;linha
 	add R0,1 ;adr coluna
 	MOVb R5,[R0];coluna
-
 	MOV R8, adr_y ; Atualiza R0 com o valor correspondente a linha inicial onde desenhar o tetramino
 	MOVB R2, [R8] ; Mete em R2, o valor da linha onde comecar a desenhar
 	MOV R8, adr_x ; Acede a tabela que contem as posicoes 
 	MOVB R3, [R8] ; Mete em R3, o valor da coluna onde comecar a desenhar	
-	
-	
 	MOV R7, R4 ; Duplica o valor das linhas em registo para criar 1 contador
 	MUL R7, R5 ; Multiplica o valor das linhas pelas colunas, para criar 1 contador do numero de elementos da tabela
 	ADD R3, R5 ; Permite repor corretamente os contadores
 	SUB R2, 1 ; Permite repor corretamente os contadores
+	CALL completar_desenho ; Chama a rotina que conclui o desenho
+	POP R8
+	POP R7
+	POP R6
+	POP R5
+	POP R4
+	POP R3
+	POP R2
+	POP R1
+	POP R0
+	RET
+	
+; **********************************************************************
+; * Completar Desenho
+; *  Com as inicializacoes feitas nas rotinas desenhar monstro e tetramino, termina o desenho
+; *Entradas:
+; *  R9 - 1 (escreve) ou 0 (apaga)
+; * Recebe da Memoria:
+; * 	  Tabela de strings do tetramino a desenhar
+; *  R2 - Linha da posicao onde desenhar
+; *  R3 - Coluna da posicao onde desenhar
+; *Saídas:
+; *  R2 e R3 nao alterados
+; **********************************************************************
+completar_desenho:
+	PUSH R0
+	PUSH R1
+	PUSH R2
+	PUSH R3
+	PUSH R5
+	PUSH R6
+	PUSH R7
+	PUSH R9
 repor_colunas:
 	MOV R6, R5 ; Duplica o valor das colunas em registo para fazer um contador
 	SUB R3, R5 ; Repoe o valor da coluna onde escrever
@@ -791,11 +821,9 @@ nao_desenhar0:
 	
 fim_desenhar_tetra:
 	POP R9
-	POP R8
 	POP R7
 	POP R6
 	POP R5
-	POP R4
 	POP R3
 	POP R2
 	POP R1
@@ -1234,16 +1262,17 @@ descer_tetra:
 	pop R1
 	pop R0
 	ret
+	
 ; **********************************************************************
 ; Pausa
 ;   Rotina que faz uma pausa.
 ; Entradas:
 ;   Nenhuma
 ; Saidas:
-;   R10 - 1:se pode desenhar 0:se n pode
+;   R10 - 1, se pode desenhar 0, se n pode
 ; **********************************************************************
 
-<<<<<<< HEAD
+
 verificar_pixel:
     PUSH  R0 ; Guarda R0
     PUSH  R1 ; Guarda R1
@@ -1284,12 +1313,49 @@ fim_verificar_pixel:
     POP R1 ; Devolve R1
     POP R0 ; Devolve R0
     RET ; Termina rotina
-=======
-verificar_se_desenha_pixel:
-	push R0
-	push R1
 	
->>>>>>> 330b2324b548e6fcd99e5c4edbc4c6795a701a4b
+; **********************************************************************
+; Rotina Verifica Desenhar
+;   Rotina que testa a ver se pode desenhar a peca
+; Entradas:
+;   Nenhuma
+; Saidas:
+;   R10 - 1 (Pode desenhar) ou 0 (Nao pode desenhar)
+; **********************************************************************
+
+verifica_desenhar:
+    PUSH  R0 ; Guarda R0
+    PUSH  R1 ; Guarda R1
+    PUSH  R2 ; Guarda R2
+    PUSH  R3 ; Guarda R3
+    PUSH  R4 ; Guarda R4
+    PUSH  R5 ; Guarda R5
+    PUSH  R6 ; Guarda R6
+    PUSH  R7 ; Guarda R7
+    PUSH  R8 ; Guarda R8
+	MOV R8, adr_y_teste ; Atualiza R0 com o valor correspondente a linha inicial onde desenhar o tetramino
+	MOVB R2, [R8] ; Mete em R2, o valor da linha onde comecar a desenhar
+	MOV R8, adr_x_teste ; Acede a tabela que contem as posicoes 
+	MOVB R3, [R8] ; Mete em R3, o valor da coluna onde comecar a desenhar
+	MOV R0, tetraminoS1 ; R0 com a tabela de strings correspondente a variante de tetramino a desenhar
+	MOVB R4, [R0] ; R4 com o valor correspondente ao numero de linhas da tabela
+	ADD R0, 1 ; Acede ao proximo elemento da tabela de strings
+	MOVB R5, [R0] ; R5 com o valor correspondente ao numero de colunas da tabela
+	MOV R7, R4 ; Duplica o valor das linhas em registo para criar 1 contador
+	MUL R7, R5 ; Multiplica o valor das linhas pelas colunas, para criar 1 contador do numero de elementos da tabela
+	ADD R3, R5 ; Permite repor corretamente os contadores
+	SUB R2, 1 ; Permite repor corretamente os contadores
+fim_verifica_desenhar:
+    POP R8 ; Devolve R8
+    POP R7 ; Devolve R7
+    POP R6 ; Devolve R6
+    POP R5 ; Devolve R5
+    POP R4 ; Devolve R4
+    POP R3 ; Devolve R3
+    POP R2 ; Devolve R2
+    POP R1 ; Devolve R1
+    POP R0 ; Devolve R0
+    RET ; Termina rotina
 	
 ; **********************************************************************
 ; Interrupçao 0
