@@ -818,7 +818,6 @@ nao_desenhar0:
 	SUB R6, 1 ; Atualiza o contador de colunas
 	JZ repor_colunas ; Se for 0 repoe as colunas
 	JMP loop_desenhar_tetra
-	
 fim_desenhar_tetra:
 	POP R9
 	POP R7
@@ -1293,15 +1292,20 @@ verificar_pixel:
 	DIV R7, R5 ; Transforma R7 numa coluna da linha onde escrever
 	ADD R0, R7 ; Acede a coluna onde escrever
 	MOD R3, R5 ; R3 com o bit onde escrever (R3 sera um valor de 0-7 que sao o numero de colunas)
-selecao_pixel1:
+selecao_pixel0:
 	AND R3, R3 ; Afectar as flags
 	JZ verif_pintado ; Quando for o ultimo bit a verificar salta para decidir se desenha ou apaga
 	SHR R6, 1 ; Atualiza a mascara para o bit seguinte ate ao bit onde e suposto escrever
 	SUB R3, 1 ; Atualiza a coluna (avanca para o proximo bit)
-	JMP selecao_pixel ; Verifica os bits todos de R3
+	JMP selecao_pixel0 ; Verifica os bits todos de R3
 verif_pintado:
-	MOVB R8, [R0] ; MOVe para R8 o que esta escrito no byte do ecra
+	MOVB R8, [R0] ; Move para R8 o que esta escrito no byte do ecra
 	AND R8, R6 ; Apaga apenas o bit escolhido
+	JNZ pode_pintar
+	MOV R10, 0
+	JMP fim_verificar_pixel
+pode_pintar:
+	MOV R10, 1
 fim_verificar_pixel:
     POP R8 ; Devolve R8
     POP R7 ; Devolve R7
@@ -1333,19 +1337,52 @@ verifica_desenhar:
     PUSH  R6 ; Guarda R6
     PUSH  R7 ; Guarda R7
     PUSH  R8 ; Guarda R8
+	PUSH  R10
+	MOV R0, adr_tetra_tipo
+	MOV R1,[R0]
+	MOV R0, adr_tetra_rot
+	MOV R2, [R0]
+	shl R2,1 ; multiplica por 2
+	add R1,R2 ;endereco tabela final
+	MOV R0,[R1]
+	;ir buscar x e y do tetramino 
+	MOVB R4,[R0] ;linha
+	add R0,1 ;adr coluna
+	MOVb R5,[R0];coluna
 	MOV R8, adr_y_teste ; Atualiza R0 com o valor correspondente a linha inicial onde desenhar o tetramino
 	MOVB R2, [R8] ; Mete em R2, o valor da linha onde comecar a desenhar
 	MOV R8, adr_x_teste ; Acede a tabela que contem as posicoes 
-	MOVB R3, [R8] ; Mete em R3, o valor da coluna onde comecar a desenhar
-	MOV R0, tetraminoS1 ; R0 com a tabela de strings correspondente a variante de tetramino a desenhar
-	MOVB R4, [R0] ; R4 com o valor correspondente ao numero de linhas da tabela
-	ADD R0, 1 ; Acede ao proximo elemento da tabela de strings
-	MOVB R5, [R0] ; R5 com o valor correspondente ao numero de colunas da tabela
+	MOVB R3, [R8] ; Mete em R3, o valor da coluna onde comecar a desenhar	
 	MOV R7, R4 ; Duplica o valor das linhas em registo para criar 1 contador
 	MUL R7, R5 ; Multiplica o valor das linhas pelas colunas, para criar 1 contador do numero de elementos da tabela
 	ADD R3, R5 ; Permite repor corretamente os contadores
 	SUB R2, 1 ; Permite repor corretamente os contadores
+repor_contadores:
+	MOV R6, R5 ; Duplica o valor das colunas em registo para fazer um contador
+	SUB R3, R5 ; Repoe o valor da coluna onde escrever
+	ADD R2, 1 ; Muda a linha onde escrever
+loop_testar_tetra:
+	ADD R0, 1 ; Acede ao proximo elemento da tabela
+	MOVB R1, [R0] ; R1 com o valor a escrever no ecra
+	AND R1, R1 ; Afeta as flags
+	JZ nao_testar ; Se for um 0 nao testa
+	CALL verificar_pixel ; Chama a rotina que verifica 1 pixel da tabela de strings, e ve se esta desenhado ou nao
+	AND R10, R10
+	JZ nao_pode
+nao_testar:
+	Sub R7,1 ; Atualiza o contador
+	JZ fim_verifica_desenhar ; Se ainda nao acabou corre outra vez
+	ADD R3, 1 ; Muda a coluna onde escrever
+	SUB R6, 1 ; Atualiza o contador de colunas
+	JZ repor_contadores ; Se for 0 repoe as colunas
+	JMP loop_testar_tetra
+nao_pode:
+	MOV R10, 0
+	JMP fim_verifica_desenhar
+pode:
+	MOV R10, 1
 fim_verifica_desenhar:
+	POP R10
     POP R8 ; Devolve R8
     POP R7 ; Devolve R7
     POP R6 ; Devolve R6
