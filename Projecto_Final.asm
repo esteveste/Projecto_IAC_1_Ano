@@ -20,7 +20,7 @@
 
 ;
 teclado_Jumper_FLAG			EQU 1470H
-tetra_jogavel			EQU 1480h ;Saber se e para criar um novo tetramino
+Flag_Pausa_Display			EQU 1480h ;Saber se e para criar um novo tetramino
 adr_Tecla_Valor         EQU 1400H	 ; Endereço de memória onde se guarda a tecla premida
 adr_Nr_random 			EQU 1410H
 adr_x					EQU 1420H  	 ; linha
@@ -438,24 +438,30 @@ sair_about:
 	POP R0 
 	RET 					; Termina a rotina
 ; *********************************************************************************
-; * Rotina Game Over
+; * Rotina Game Over(MAL FEITA EMANDAR, TEM DE SE IR A MEMORIA BUSCAR O VALOR DA TECLA)
 ; * R1 sera a tecla recebida por esperar tecla, como nao sabia qual seria o registo da tecla usei R1
 ; *********************************************************************************
 
 Gameover:
 	PUSH R0 				; Guarda registos
 	PUSH R1 
-	PUSH R2 
+	PUSH R2
+	
 	CALL inverte_ecra 		; Chama a rotina para inverter o ecra
 	;DI1 ; Desliga as interrupcoes
     ;DI0
     DI
+	MOV R2, Flag_Pausa_Display
+	MOV R1, 1				;vamos ativar a flag da pausa no ecra para dar um efeito de transiçao
+	MOV [R2],R1
 	MOV R0, ecra_fim 		; Guarda em R0 a tabela de strings ecra_fim
 	CALL escreve_tabela_ecra ; Chama a rotina para escrever no ecra a tabela de strings ecra_fim
+	MOV R1,0
+	MOV [R2],R1 ;Voltamos a desativar a Flag da pausa para n ser chamada nas outras rotinas
 gameover_loop:
 	CALL teclado 			; Chama a rotina que devolve o valor de uma tecla
 	MOV R2, tecla_jogar 	; Atualiza R2 com o valor da tecla jogar
-	CMP R1, R2 				; Verifica se a tecla e' a de jogar
+	;r1 TEM DE SER MEMORIA->>>>CMP R1, R2 				; Verifica se a tecla e' a de jogar
 	JNZ verif_about 		; Se nao for verifica se e' a de about
 	MOV R2, estado_Preparar_jogo 		; Atualiza R2 com o estado novo (estado preparar jogo)
 	MOV R1, estado_programa ; Atualiza R1 com o endereco do estado programa
@@ -698,6 +704,7 @@ desenhar_tetra:
 	;ADD R0, 1 ; Acede ao proximo elemento da tabela de strings
 	;MOVB R5, [R0] ; R5 com o valor correspondente ao numero de colunas da tabela
 	
+	
 	MOV R0, adr_tetra_tipo
 	MOV R1,[R0]
 	MOV R0, adr_tetra_rot
@@ -895,6 +902,7 @@ Jumper_FLAG:
 	AND R4,R3
 	JNZ call_mover_monstro; que representa a flag do descer_tetra
 	jmp fim_JUMPER
+	
 call_mover_monstro:
 	CLR R3,1
 	call mover_monstro
@@ -1002,17 +1010,29 @@ escreve_tabela_ecra:
     PUSH  R1
     PUSH  R2
     PUSH  R3
+	push R4
     MOV   R3, local_Ecra    ; Endereço do ecrã
     ;ADD   R3, R1            ; Actualização do endereço onde começar a escrever
-
+	MOV R1,Flag_Pausa_Display ;;Vai ver se o ecra q vamos apresentar vai usar a pausa
+	MOV R4,[R1]
     MOV   R2, MAX_ELE       ; Número de elementos da tabela de strings
+	
+verificar_pausa_ecra:
+	AND R4,R4
+	JNZ chamar_pausa ;vai chamar a pausa caso Flag_Pausa_Display for 1
+	jmp ciclo_ecra
+
+chamar_pausa:
+	call pausa
+	jmp ciclo_ecra
+	
 ciclo_ecra:  
     MOVB  R1, [R0]          ; Elemento actual da tabela de strings
     MOVB  [R3], R1          ; Escreve o elemento da tabela de strings no ecrã
     ADD   R0, 1             ; Acede ao índice seguinte da tabela de strings
     ADD   R3, 1             ; Avança para o byte seguinte do ecrã
     SUB   R2, 1             ; Actualiza o contador
-    JNZ   ciclo_ecra        ; Volta ao ciclo para escrever o que falta
+    JNZ   verificar_pausa_ecra        ; Volta ao ciclo para escrever o que falta
     POP   R3                ; Recupera registos
     POP   R2
     POP   R1
@@ -1075,13 +1095,13 @@ ciclo_inverte:
 ; Pausa
 ;   Rotina que faz uma pausa.
 ; Entradas:
-;   R4 - 
+;    - 
 ; Saidas:
 ;   Nenhuma
 ; **********************************************************************
 pausa:
     PUSH  R0                ; Guarda registos
-    MOV   R0, 5000          ; R0 com um valor grande para fazer uma contagem decrescente, apenas para fazer uma pausa entre rotinas
+    MOV   R0, 1000          ; R0 com um valor grande para fazer uma contagem decrescente, apenas para fazer uma pausa entre rotinas
 ciclo_pausa:
     SUB   R0, 1             ; Subtrai R0 
     JNZ   ciclo_pausa       ; Enquanto não for 0 continua a subtrair
