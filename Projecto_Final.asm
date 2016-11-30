@@ -29,6 +29,7 @@ adr_x_monstro			EQU 1440H
 const_y_monstro 		EQU 24
 adr_tetra_tipo			EQU 1450H  
 adr_tetra_rot 			EQU 1460H 	 ; nr a adicionar ao tipo na tabela(melhorar coment)
+
 linha	                EQU 8H       ; Posição do bit correspondente à linha a testar
 local_Segmentos	        EQU 0A000H 	 ; Endereco do display de 7 segmentos
 out_Teclado	            EQU 0C000H   ; Endereço do porto de escrita do teclado
@@ -58,6 +59,7 @@ sequencia_tetraminoL 	EQU 01H
 sequencia_tetraminoT 	EQU 02H
 sequencia_tetraminoS 	EQU 03H
 sequencia_monstro 		EQU 00H
+valor_rot_Max			EQU 3
 ; ***********************************************************************
 ; * Ecras
 ; ***********************************************************************
@@ -1135,8 +1137,46 @@ random:
 	Pop R1					; Recupera registos
 	pop R0
 	RET						; Termina a rotina
-
-	; **********************************************************************
+; **********************************************************************
+; Interrupçao 0
+;   Rotina que faz uma pausa.
+; Entradas:
+;  none
+; Saidas:
+;   Nenhuma
+; **********************************************************************
+rodar_monstro:
+	push R0
+	push R1
+	push R2
+	push R9
+	mov R9,0 ;apagar posicao atual tetra
+	call desenhar_tetra
+	
+	mov R0, adr_tetra_rot
+	MOV R1,[R0]
+	MOV R2, valor_rot_Max
+	CMP R1,R2
+	jz redefinir_rot_tetra
+	ADD R1,1 
+	jmp set_rot_tetra
+redefinir_rot_tetra:
+	MOV R1,0 ;Faz reset a rotacao
+	jmp set_rot_tetra
+	
+set_rot_tetra:
+	MOV [R0],R1
+	MOV R9,1 ;MODO escrever peca
+	CALL desenhar_tetra
+	pop R9
+	pop R2
+	pop R1
+	pop R0
+	
+	
+	
+	
+; **********************************************************************
 ; Interrupçao 0
 ;   Rotina que faz uma pausa.
 ; Entradas:
