@@ -1371,7 +1371,7 @@ loop_testar_tetra:
 	JZ nao_pode
 nao_testar:
 	Sub R7,1 ; Atualiza o contador
-	JZ fim_verifica_desenhar ; Se ainda nao acabou corre outra vez
+	JZ pode ; Se ainda nao acabou corre outra vez
 	ADD R3, 1 ; Muda a coluna onde escrever
 	SUB R6, 1 ; Atualiza o contador de colunas
 	JZ repor_contadores ; Se for 0 repoe as colunas
