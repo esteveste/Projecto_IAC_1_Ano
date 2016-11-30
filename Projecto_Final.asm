@@ -29,7 +29,8 @@ adr_x_monstro			EQU 1440H
 const_y_monstro 		EQU 24
 adr_tetra_tipo			EQU 1450H  
 adr_tetra_rot 			EQU 1460H 	 ; nr a adicionar ao tipo na tabela(melhorar coment)
-
+adr_tab_verif_tipo		EQU 1455H    ; adr tab para verificar se pode escrever
+adr_tab_verif_rot		EQU 1465H    ; adr valor de rot para adicionar a verificar
 linha	                EQU 8H       ; Posição do bit correspondente à linha a testar
 local_Segmentos	        EQU 0A000H 	 ; Endereco do display de 7 segmentos
 out_Teclado	            EQU 0C000H   ; Endereço do porto de escrita do teclado
@@ -1092,7 +1093,7 @@ ciclo_inverte:
     POP   R1
     POP   R0
     RET                   	; Termina rotina
-	
+
 ; **********************************************************************
 ; Pausa
 ;   Rotina que faz uma pausa.
@@ -1192,6 +1193,20 @@ descer_tetra:
 	pop R1
 	pop R0
 	ret
+; **********************************************************************
+; Pausa
+;   Rotina que faz uma pausa.
+; Entradas:
+;    - 
+; Saidas:
+;   R10 - 1:se pode desenhar 0:se n pode
+; **********************************************************************
+
+verificar_se_desenha_pixel:
+	push R0
+	push R1
+	
+	
 ; **********************************************************************
 ; Interrupçao 0
 ;   Rotina que faz uma pausa.
