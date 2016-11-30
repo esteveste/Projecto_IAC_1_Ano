@@ -319,7 +319,7 @@ tab_int:        WORD    int0
 tab_estado:
     WORD  Welcome     	; 0
 	WORD Preparar_jogo	; 1
-	WORD Criar_Tetra    ; 2
+	WORD Criar_tetra    ; 2
 	WORD  Jogo 			; 3
 	Word Suspender 		; 4 
 	Word Gameover 		; 5
@@ -376,7 +376,7 @@ esperar_tecla:
 	MOV R0, adr_Tecla_Valor
 	MOVb R2,[R0]
 	MOV R3, tecla_jogar
-	CMP R2, R3 ; tecla c
+	CMP R2, R3 ; tecla b
 	JNZ esperar_tecla
 	MOV R0, estado_programa ; Fazer comentarios diferentes ; Obter o estado actual adrress
 	MOV R1, estado_Preparar_jogo  ; 
@@ -504,7 +504,7 @@ Preparar_jogo:
 	MOV R1,0 				; valor 00 para mostrar no ecra de segmentos
 	call ecra_segmentos
 	MOV R0, estado_programa ; MOVe o endereco do estado_programa para R0
-	MOV R1, estado_Jogo 	; Atualiza R1 com o valor do estado jogar
+	MOV R1, estado_Criar_Tetra 	; Atualiza R1 com o valor do estado jogar
 	MOVB [R0], R1 			; Atualiza o valor do estado_programa para o estado atual (estado jogar)
 	;MOV R0, l_centro_tetramino ; Atualiza R0 com a word que contem a linha inicial para desenhar o tetramino
 	;MOV R2, [R0] ; Atualiza R1 com o valor da linha
@@ -529,10 +529,6 @@ Criar_tetra:
 	PUSH R3
 	PUSH R8
 	Push R9
-	MOV R0, tetra_jogavel ;cujo valor correspondente a se vamos criar novo tetramino
-	MOV R1,[R0]
-	AND R1,R1
-	JNZ esperar_tecla_jogo
 	;MOV R1, adr_x
 	;MOV R0,0
 	;MOV [R1], R0 			; mete a posicao padrao para ser escrita
@@ -608,7 +604,7 @@ criar_monstro:
 ; *********************************************************************************
 ; * Rotina que permite jogar
 ; *********************************************************************************
-jogo:
+Jogo:
 esperar_tecla_jogo:
 	CALL teclado ; Chama a rotina do teclado e devolve uma tecla em memoria
 	MOV R0, adr_Tecla_Valor ; Vai buscar para R0 o endereco onde esta a tecla carregada
@@ -647,14 +643,14 @@ verif_tecla_direita:
 	CMP R2, R3 ; Verifica se e a tecla de mover para a direita
 	JNZ verif_tecla_esquerda ; Se nao for verifica se e a de mover para a esquerda
 	MOV R9, 1 ; R9 vai ser recebido pela rotina de mover o tetramino (1 - direita)
-	CALL mover_tetramino ; Chama a rotina que move o tetramino
+	;CALL mover_tetramino ; Chama a rotina que move o tetramino
 	JMP esperar_tecla_jogo ; Volta a esperar por uma tecla
 verif_tecla_esquerda:
 	MOV R3, tecla_esquerda ; R3 com o valor da tecla para mover a esquerda
 	CMP R2, R3 ; Verifica se e a tecla de mover para a esquerda
 	JNZ verif_tecla_descer ; Se nao for verifica se e a tecla de descer a peca
 	MOV R9, 0 ; R9 vai ser recebido pela rotina de mover o tetramino (0 - esquerda)
-	CALL mover_tetramino ; Chama a rotina que move o tetramino
+	;CALL mover_tetramino ; Chama a rotina que move o tetramino
 	JMP esperar_tecla_jogo ; Volta a esperar por uma tecla
 verif_tecla_descer:
 	MOV R3, tecla_descer ; R3 com o valor da tecla para descer
@@ -1079,6 +1075,7 @@ ciclo_ecra:
     ADD   R3, 1             ; Avança para o byte seguinte do ecrã
     SUB   R2, 1             ; Actualiza o contador
     JNZ   verificar_pausa_ecra        ; Volta ao ciclo para escrever o que falta
+	POP R4
     POP   R3                ; Recupera registos
     POP   R2
     POP   R1
