@@ -40,6 +40,10 @@ tecla_pausa             EQU 0CH
 tecla_about             EQU 0AH
 tecla_terminar          EQU 0EH
 tecla_jogar             EQU 0BH
+tecla_rodar				EQU 01H
+tecla_direita			EQU 06H
+tecla_esquerda			EQU 04H
+tecla_descer			EQU 05H
 local_Ecra	            EQU 8000H
 OFF                     EQU 0        ; Valor da tecla nao premida
 ON                      EQU 1        ; Valor da tecla premida
@@ -589,7 +593,20 @@ criar_monstro:
 	MOV R9,1
 	call desenhar_monstro
 	EI1
+	MOV R0, estado_programa ; Meter em R0 o endereco do estado_programa
+	MOV R1, estado_Jogo ; Meter em R1 o valor do estado suspender 
+	MOVB [R0], R1 ; Mover para o estado_programa o estado atual
+	POP R9
+	POP	R8
+	POP R3
+	POP R2
+	POP R1
+	POP R0
+	RET
 
+; *********************************************************************************
+; * Rotina que permite jogar
+; *********************************************************************************
 jogo:
 esperar_tecla_jogo:
 	CALL teclado ; Chama a rotina do teclado e devolve uma tecla em memoria
@@ -597,35 +614,52 @@ esperar_tecla_jogo:
 	MOVB R2,[R0] ; R2 com o valor da tecla carregada da memoria
 	MOV R3, tecla_pausa ; Mete em R3 o valor da tecla de pausa
 	CMP R2, R3 ; Verifica se e a tecla de pausa
-	JNZ verificar_tecla_terminar ; Se nao for a tecla de pausa verifica se e a de terminar
+	JNZ verif_tecla_terminar ; Se nao for a tecla de pausa verifica se e a de terminar
 	MOV R0, estado_programa ; Meter em R0 o endereco do estado_programa
 	MOV R1, estado_Suspender ; Meter em R1 o valor do estado suspender 
 	MOVB [R0], R1 ; Mover para o estado_programa o estado atual
-	jmp jogo_fim ; Sai do modo jogo
-verificar_tecla_terminar:
+	JMP jogo_fim ; Sai do modo jogo
+verif_tecla_terminar:
 	MOV R3, tecla_terminar ; R3 com o valor da tecla de terminar
-	CMP R2, R3 ; tecla e
-	JNZ esperar_tecla_jogo
-	
-	mov R0, tetra_jogavel
-	MOV R1,0 ;vai indicar que ja n temos tetramino para jogar 
-	MOV [R0],R1 ; visto q vamos terminar o jogo
-	
-	MOV R0, estado_programa ; Fazer comentarios diferentes ; Obter o estado actual adrress
-	MOV R1, estado_Gameover  ; 
-	MOVb [R0], R1
-	jmp jogo_fim
-	
-	
-	
-
-
-
-
-
-
-
-
+	CMP R2, R3 ; Verifica se e a tecla de terminar
+	JNZ esperar_tecla_jogo ; Se nao for espera por uma nova tecla	
+	MOV R0, estado_programa ; Meter em R0 o endereco do estado_programa
+	MOV R1, estado_Gameover  ; Meter em R1 o valor do estado gameover
+	MOVB [R0], R1 ; Mover para o estado_programa o estado atual
+	JMP jogo_fim ; Sai do modo jogo
+verif_tecla_suspender:
+	MOV R3, tecla_pausa ; R3 com o valor da tecla de pausa
+	CMP R2, R3 ; Verifica se e a tecla de suspender
+	JNZ verif_tecla_rodar ; Se nao for verifica se e a tecla de rodar
+	MOV R0, estado_programa ; Meter em R0 o endereco do estado_programa
+	MOV R1, estado_Suspender  ; Meter em R1 o valor do estado suspender
+	MOVB [R0], R1 ; Mover para o estado_programa o estado atual
+	JMP jogo_fim ; Sai do modo jogo
+verif_tecla_rodar:
+	MOV R3, tecla_rodar ; R3 com o valor da tecla de rodar
+	CMP R2, R3 ; Verifica se e a tecla de rodar
+	JNZ verif_tecla_direita ; Se nao for verifica se e a de mover direita
+	CALL rodar_tetra ; Chama a rotina que roda o tetramino
+	JMP esperar_tecla_jogo ; Volta a esperar por uma tecla
+verif_tecla_direita:
+	MOV R3, tecla_direita ; R3 com o valor da tecla para mover para a direita
+	CMP R2, R3 ; Verifica se e a tecla de mover para a direita
+	JNZ verif_tecla_esquerda ; Se nao for verifica se e a de mover para a esquerda
+	MOV R9, 1 ; R9 vai ser recebido pela rotina de mover o tetramino (1 - direita)
+	CALL mover_tetramino ; Chama a rotina que move o tetramino
+	JMP esperar_tecla_jogo ; Volta a esperar por uma tecla
+verif_tecla_esquerda:
+	MOV R3, tecla_esquerda ; R3 com o valor da tecla para mover a esquerda
+	CMP R2, R3 ; Verifica se e a tecla de mover para a esquerda
+	JNZ verif_tecla_descer ; Se nao for verifica se e a tecla de descer a peca
+	MOV R9, 0 ; R9 vai ser recebido pela rotina de mover o tetramino (0 - esquerda)
+	CALL mover_tetramino ; Chama a rotina que move o tetramino
+	JMP esperar_tecla_jogo ; Volta a esperar por uma tecla
+verif_tecla_descer:
+	MOV R3, tecla_descer ; R3 com o valor da tecla para descer
+	CMP R2, R3 ; Verifica se e a tecla de mover para a esquerda
+	JNZ esperar_tecla_jogo ; Espera por uma tecla
+	CALL descer_tetra ; Chama a rotina para descer o tetramino
 jogo_fim:
 	Pop R9
 	POP R8
@@ -1145,7 +1179,7 @@ random:
 ; Saidas:
 ;   Nenhuma
 ; **********************************************************************
-rodar_monstro:
+rodar_tetra:
 	push R0
 	push R1
 	push R2
