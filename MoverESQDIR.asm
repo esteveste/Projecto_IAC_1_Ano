@@ -33,7 +33,7 @@ mover:
 	ADD R0, 1 ; Acede ao proximo elemento da tabela de strings
 	MOVB R5, [R0] ; R5 com o valor correspondente ao numero de colunas da tabela
 	CALL verifica_desenhar ; Chama a rotina que verifica se pode desenhar, se R11 for 0 nao pode, se for 1 pode
-	AND R11, R11 (O registo depende da funcao verifica_desenhar)
+	AND R11, R11 ; (O registo depende da funcao verifica_desenhar)
 	JZ fim_mover_tetra ; Se nao poder desenhar acaba
 	MOV R9, 0 ; Mete em R9 1 valor para decidir de desenha ou apaga, se 1 escreve se 0 apaga
 	CALL desenhar_tetra
