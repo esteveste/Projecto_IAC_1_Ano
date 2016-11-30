@@ -44,10 +44,11 @@ OFF                     EQU 0        ; Valor da tecla nao premida
 ON                      EQU 1        ; Valor da tecla premida
 estado_Welcome          EQU 0
 estado_Preparar_jogo    EQU 1
-estado_Jogo             EQU 2
-estado_Suspender        EQU 3
-estado_Gameover         EQU 4
-estado_About            EQU 5
+estado_Criar_Tetra      EQU 2
+estado_Jogo             EQU 3
+estado_Suspender        EQU 4
+estado_Gameover         EQU 5
+estado_About            EQU 6
 mascara_0_1bits 		EQU 3H
 mascara_2_3bits 		EQU 0CH
 mascara_bit0			EQU 1H
@@ -162,9 +163,6 @@ STRING 00FFH, 00FFH, 00FFH, 00FFH
 STRING 00FFH, 00FFH, 00FFH, 00FFH
 STRING 00FFH, 00FFH, 00FFH, 00FFH
 STRING 00FFH, 00FFH, 00FFH, 00FFH
-
-ecralinha: 							; linha vertical 
-STRING 0000H, 0008H, 0000H, 0000H
 
 tetraminos:
 WORD tetraminoI
@@ -314,12 +312,13 @@ tab_int:        WORD    int0
 tab_estado:
     WORD  Welcome     	; 0
 	WORD Preparar_jogo	; 1
-	WORD  Jogo 			; 2
-	Word Suspender 		; 3 
-	Word Gameover 		; 4
-	Word About 			; 5
+	WORD Criar_Tetra    ; 2
+	WORD  Jogo 			; 3
+	Word Suspender 		; 4 
+	Word Gameover 		; 5
+	Word About 			; 6
 estado_programa:        ; variavel que guarda o estado actual do controlo
-    STRING 0H; ;;SEMMPREEE MOVB
+    STRING 0H; Comeca no welcome
 
 ; ***********************************************************************
 ; * Código
@@ -382,45 +381,50 @@ esperar_tecla:
 	ret
 ; *********************************************************************************
 ; * Rotina Suspender
-; * 
 ; *********************************************************************************
 	
 Suspender:
     PUSH R1 				; Guarda registos
     PUSH R2 
+	PUSH R3
     DI    					; Desliga as interrupcoes
     CALL inverte_ecra 		; Chama a rotina de inverter o ecra para diferenciar do estado normal de jogo
 ciclo_suspender:
     CALL  teclado 			; Chama a rotina do teclado e devolve em R1 a tecla pressionada
     MOV   R2, tecla_pausa 	; Atualiza R2 com o valor da tecla de suspender
-    CMP   R1, R2 			; Verifica se a tecla pressionada e a tecla de suspender
+	MOV   R1, adr_Tecla_Valor ; Vai a memoria buscar o valor da tecla carregada
+	MOV   R3, [R1]          ; Mete em registo o valor da memoria
+    CMP   R3, R2 			; Verifica se a tecla pressionada e a tecla de suspender
     JNZ   ciclo_suspender 	; Caso nao seja a tecla de suspender, repete ate receber a tecla de suspender para tirar do modo de pausa
     MOV   R2, estado_Jogo		; Atualiza R2 com o novo estado (estado jogar)
-    MOV   R1, estado_programa
+    MOV   R1, estado_programa ; Mete em R1, o endereco do estado_programa
     MOVB  [R1], R2 			; Atualiza o estado_programa com o novo estado
 	;EI1 ; Liga as interrupcoes
     ;EI0 talvez desnecessario
     EI
-    CALL inverte_ecra
+    CALL inverte_ecra       ; Chama a rotina que inverte o ecra para criar um efeito visual
+	POP R3 
     POP R2 					; Retorna registos
     POP R1 
     RET 					; Termina a rotina
 
 ; *********************************************************************************
 ; * Rotina About
-; * 
 ; *********************************************************************************
 
 About:
 	PUSH R0 				; Guarda registos
 	PUSH R1 
 	PUSH R2 
+	PUSH R3
 	MOV R0, ecra_about 		; Guarda em R0 a tabela de strings ecra_about
 	CALL escreve_tabela_ecra ; Chama a rotina para escrever no ecra a tabela de strings ecra_about
 about_loop:
 	CALL esperar_tecla 		; Chama a rotina que devolve o valor de uma tecla premida
 	MOV R2, tecla_terminar ; Atualiza R2 com o valor da tecla terminar
-	CMP R1, R2 				; Verifica se a tecla e' a tecla de terminar
+	MOV R1, adr_Tecla_Valor ; Vai buscar o valor da tecla carregada a memoria
+	MOV R3, [R1]            ; R3 com o valor da tecla na memoria
+	CMP R3, R2 				; Verifica se a tecla e' a tecla de terminar
 	JNZ verif_jogar 		; Se nao for verifica se e a de jogar
 	MOV R2, estado_Gameover 			; Atualiza R2 com o valor do novo estado (estado terminar)
 	JMP terminar 			; Termina caso seja a tecla terminar
@@ -461,11 +465,13 @@ Gameover:
 gameover_loop:
 	CALL teclado 			; Chama a rotina que devolve o valor de uma tecla
 	MOV R2, tecla_jogar 	; Atualiza R2 com o valor da tecla jogar
-	;r1 TEM DE SER MEMORIA->>>>CMP R1, R2 				; Verifica se a tecla e' a de jogar
+	MOV R1, adr_Tecla_Valor ; Vai buscar a memoria a tecla carregada do teclado
+	MOV R3, [R1]            ; R3 com o valor da tecla em memoria
+	CMP R3, R2              ; Verifica se e a tecla de jogar
 	JNZ verif_about 		; Se nao for verifica se e' a de about
 	MOV R2, estado_Preparar_jogo 		; Atualiza R2 com o estado novo (estado preparar jogo)
 	MOV R1, estado_programa ; Atualiza R1 com o endereco do estado programa
-	MOV [R1], R2 			; Atualiza o estado programa com o valor do estado atual (estado jogar)
+	MOV [R1], R2 			; Atualiza o estado programa com o valor do estado atual (estado preparar jogo)
 	JMP sair_gameover
 verif_about:
 	MOV R2, tecla_about 	; Atualiza R2 com o valor da tecla about
@@ -506,8 +512,10 @@ Preparar_jogo:
 	
 	
 
-;####Jogo
-Jogo:
+; *********************************************************************************
+; * Rotina que permite a criacao das pecas quando necessario
+; *********************************************************************************
+Criar_tetra:
 	PUSH R0
 	PUSH R1
 	PUSH R2
@@ -580,19 +588,20 @@ criar_monstro:
 	call desenhar_monstro
 	EI1
 
+jogo:
 esperar_tecla_jogo:
-	call teclado ;(FAZER MAIS TARDE)
-	MOV R0, adr_Tecla_Valor
-	MOVb R2,[R0]
-	MOV R3, tecla_pausa
-	CMP R2, R3 ; tecla c
-	JNZ verificar_tecla_terminar
-	MOV R0, estado_programa ; Fazer comentarios diferentes ; Obter o estado actual adrress
-	MOV R1, estado_Suspender  ; 
-	MOVb [R0], R1
-	jmp jogo_fim
+	CALL teclado ; Chama a rotina do teclado e devolve uma tecla em memoria
+	MOV R0, adr_Tecla_Valor ; Vai buscar para R0 o endereco onde esta a tecla carregada
+	MOVB R2,[R0] ; R2 com o valor da tecla carregada da memoria
+	MOV R3, tecla_pausa ; Mete em R3 o valor da tecla de pausa
+	CMP R2, R3 ; Verifica se e a tecla de pausa
+	JNZ verificar_tecla_terminar ; Se nao for a tecla de pausa verifica se e a de terminar
+	MOV R0, estado_programa ; Meter em R0 o endereco do estado_programa
+	MOV R1, estado_Suspender ; Meter em R1 o valor do estado suspender 
+	MOVB [R0], R1 ; Mover para o estado_programa o estado atual
+	jmp jogo_fim ; Sai do modo jogo
 verificar_tecla_terminar:
-	MOV R3, tecla_terminar ;gameover
+	MOV R3, tecla_terminar ; R3 com o valor da tecla de terminar
 	CMP R2, R3 ; tecla e
 	JNZ esperar_tecla_jogo
 	
