@@ -20,35 +20,42 @@
 
 ;
 teclado_Jumper_FLAG			EQU 1470H
+monstro_ativo 				EQU 1478H ;indica se existe um monstro ativo
 Flag_Pausa_Display			EQU 1480h ;Saber se e para criar um novo tetramino
 Flag_Tecla_Pressionada 		EQU 1486H ;De modo a permitir uma rotina correr apenas 1 vez numa funcao
 adr_Tecla_Valor         EQU 1490H	 ; Endereço de memória onde se guarda a tecla premida
+pontuacao 				EQU 1498H
 adr_Nr_random 			EQU 1410H
 adr_x					EQU 1420H  	 ; linha
 adr_y					EQU 1430H    ; coluna
-adr_x_teste				EQU 1426H  	 ; linha
-adr_y_teste				EQU 1436H    ; coluna
-adr_x_monstro			EQU 1440H
+adr_x_teste				EQU 1428H  	 ; linha
+adr_y_teste				EQU 1438H    ; coluna
+adr_x_monstro			EQU 1448H
 const_y_monstro 		EQU 24
 adr_tetra_tipo			EQU 1450H  
 adr_tetra_rot 			EQU 1460H 	 ; nr a adicionar ao tipo na tabela(melhorar coment)
-adr_tab_verif_tipo		EQU 1455H    ; adr tab para verificar se pode escrever
-adr_tab_verif_rot		EQU 1465H    ; adr valor de rot para adicionar a verificar
+adr_tetra_rot_teste		EQU 1468H    ; rotacao teste para testar
 linha	                EQU 8H       ; Posição do bit correspondente à linha a testar
 local_Segmentos	        EQU 0A000H 	 ; Endereco do display de 7 segmentos
 out_Teclado	            EQU 0C000H   ; Endereço do porto de escrita do teclado
 in_Teclado		        EQU 0E000H   ; Endereço do porto de leitura do teclado
-elem_Ecra                EQU 128H     ; Número de bytes do ecrã
+elem_Ecra                EQU 128     ; Número de bytes do ecrã
 elem_tabelas 	            EQU 128
 tecla_pausa             EQU 0CH
 tecla_about             EQU 0AH
-tecla_terminar          EQU 0EH
+tecla_gameover          EQU 0EH
 tecla_jogar             EQU 0BH
 tecla_rodar				EQU 01H
 tecla_direita			EQU 06H
 tecla_esquerda			EQU 04H
 tecla_descer			EQU 05H
+tecla_sair_estado		EQU 0FFH
 local_Ecra	            EQU 8000H
+
+
+valor_max_decimal		EQU 9
+linha_tetris_completa	EQU 3;nr de bytes q irao ser verificados
+forcar_saida			EQU 1
 OFF                     EQU 0        ; Valor da tecla nao premida
 ON                      EQU 1        ; Valor da tecla premida
 estado_Welcome          EQU 0
@@ -63,7 +70,12 @@ mascara_2_3bits 		EQU 0CH
 mascara_bit0			EQU 1H
 mascara_bit1			EQU 2H
 mascara_bit2			EQU 4H
+mascara_bit3			EQU 8H
+mascara_bit4			EQU 10H
+
 mascara_bits_0_3		EQU 0FH
+mascara_bits_4_7		EQU 0F0H
+mascara_bits_6_7		EQU 0C0H
 sequencia_tetraminoI 	EQU 00H
 sequencia_tetraminoL 	EQU 01H
 sequencia_tetraminoT 	EQU 02H
@@ -310,7 +322,7 @@ SP_pilha:					 ; Etiqueta com o endereço final da pilha
 ; *********************************************************************************
 ; * Tabela de Interrupções
 ; *********************************************************************************
-
+;Place 2500H
 ; Tabela de vectores de interrupção
 tab_int:        WORD    int0
 				WORD    int1
@@ -399,13 +411,15 @@ Suspender:
     PUSH R1 				; Guarda registos
     PUSH R2 
 	PUSH R3
-    DI    					; Desliga as interrupcoes
+    
+	
+	DI    					; Desliga as interrupcoes
     CALL inverte_ecra 		; Chama a rotina de inverter o ecra para diferenciar do estado normal de jogo
 ciclo_suspender:
     CALL  teclado 			; Chama a rotina do teclado e devolve em R1 a tecla pressionada
-    MOV   R2, tecla_pausa 	; Atualiza R2 com o valor da tecla de suspender
+    MOV   R2, tecla_jogar 	; Atualiza R2 com o valor da tecla de suspender
 	MOV   R1, adr_Tecla_Valor ; Vai a memoria buscar o valor da tecla carregada
-	MOV   R3, [R1]          ; Mete em registo o valor da memoria
+	MOVB   R3, [R1]          ; Mete em registo o valor da memoria
     CMP   R3, R2 			; Verifica se a tecla pressionada e a tecla de suspender
     JNZ   ciclo_suspender 	; Caso nao seja a tecla de suspender, repete ate receber a tecla de suspender para tirar do modo de pausa
     MOV   R2, estado_Jogo		; Atualiza R2 com o novo estado (estado jogar)
@@ -413,6 +427,8 @@ ciclo_suspender:
     MOVB  [R1], R2 			; Atualiza o estado_programa com o novo estado
     CALL inverte_ecra       ; Chama a rotina que inverte o ecra para criar um efeito visual
 	EI
+
+
 	POP R3 
     POP R2 					; Retorna registos
     POP R1 
@@ -430,22 +446,22 @@ About:
 	MOV R0, ecra_about 		; Guarda em R0 a tabela de strings ecra_about
 	CALL escreve_tabela_ecra ; Chama a rotina para escrever no ecra a tabela de strings ecra_about
 about_loop:
-	CALL esperar_tecla 		; Chama a rotina que devolve o valor de uma tecla premida
-	MOV R2, tecla_terminar ; Atualiza R2 com o valor da tecla terminar
+	CALL teclado 		; Chama a rotina que devolve o valor de uma tecla premida
+	MOV R2, tecla_gameover ; Atualiza R2 com o valor da tecla terminar
 	MOV R1, adr_Tecla_Valor ; Vai buscar o valor da tecla carregada a memoria
-	MOV R3, [R1]            ; R3 com o valor da tecla na memoria
+	MOVb R3, [R1]            ; R3 com o valor da tecla na memoria
 	CMP R3, R2 				; Verifica se a tecla e' a tecla de terminar
 	JNZ verif_jogar 		; Se nao for verifica se e a de jogar
 	MOV R2, estado_Gameover 			; Atualiza R2 com o valor do novo estado (estado terminar)
 	JMP terminar 			; Termina caso seja a tecla terminar
 verif_jogar:
 	MOV R2, tecla_jogar 	; Atualiza R2 com o valor da tecla jogar
-	CMP R1, R2 				; Verifica se a tecla e' a tecla de jogar
+	CMP R3, R2 				; Verifica se a tecla e' a tecla de jogar
 	JNZ about_loop 			; Se nao for corre o loop outra vez
 	MOV R2, estado_Preparar_jogo 			; Atualiza R2 com o valor do novo estado (estado jogar)
 terminar:
 	MOV R1, estado_programa ; Atualiza R1 com o endereco do estado programa
-	MOV [R1], R2 			; Atualiza o estado programa com o valor do estado atual (estado terminar)
+	MOVb [R1], R2 			; Atualiza o estado programa com o valor do estado atual (estado terminar)
 sair_about:
 	POP R3
 	POP R2 					; Retorna registos
@@ -460,11 +476,11 @@ Gameover:
 	PUSH R0 				; Guarda registos
 	PUSH R1 
 	PUSH R2
+	DI1 ;Desativa a interrupção do monstro
+	DI0 ;Desativa  a interrupcao da peca
 	
 	CALL inverte_ecra 		; Chama a rotina para inverter o ecra
-	;DI1 ; Desliga as interrupcoes
-    ;DI0
-    DI
+
 	MOV R2, Flag_Pausa_Display
 	MOV R1, 1				;vamos ativar a flag da pausa no ecra para dar um efeito de transiçao
 	MOV [R2],R1
@@ -476,21 +492,22 @@ gameover_loop:
 	CALL teclado 			; Chama a rotina que devolve o valor de uma tecla
 	MOV R2, tecla_jogar 	; Atualiza R2 com o valor da tecla jogar
 	MOV R1, adr_Tecla_Valor ; Vai buscar a memoria a tecla carregada do teclado
-	MOV R3, [R1]            ; R3 com o valor da tecla em memoria
+	MOVb R3, [R1]            ; R3 com o valor da tecla em memoria
 	CMP R3, R2              ; Verifica se e a tecla de jogar
 	JNZ verif_about 		; Se nao for verifica se e' a de about
 	MOV R2, estado_Preparar_jogo 		; Atualiza R2 com o estado novo (estado preparar jogo)
 	MOV R1, estado_programa ; Atualiza R1 com o endereco do estado programa
-	MOV [R1], R2 			; Atualiza o estado programa com o valor do estado atual (estado preparar jogo)
+	MOVb [R1], R2 			; Atualiza o estado programa com o valor do estado atual (estado preparar jogo)
 	JMP sair_gameover
 verif_about:
 	MOV R2, tecla_about 	; Atualiza R2 com o valor da tecla about
-	CMP R1, R2 				; Verifica se e' a tecla about
+	CMP R3, R2 				; Verifica se e' a tecla about
 	JNZ gameover_loop 		; Volta a correr o loop gameover
 	MOV R2, estado_About 	; Atualiza R2 com o estado novo (estado about)
 	MOV R1, estado_programa ; Atualiza R1 com o endereco do estado programa
-	MOV [R1], R2 			; Atualiza o estado programa com o valor do estado atual (estado about)
+	MOVb [R1], R2 			; Atualiza o estado programa com o valor do estado atual (estado about)
 sair_gameover:
+	
 	POP R2 					; Retorna registos
 	POP R1 
 	POP R0 
@@ -506,6 +523,12 @@ Preparar_jogo:
 	CALL ecra_linhalateral 	; Chama a rotina para desenhar o limite lateral
 	MOV R1,0 				; valor 00 para mostrar no ecra de segmentos
 	call ecra_segmentos
+	mov R0,pontuacao ;carraga o endereco da pontuacao
+	movb [R0],R1 ;vamos redefinir a pontucao do jogo a 0
+	
+	mov r0,monstro_ativo ;tab memoria q indica se ja existe um monstro ativo
+	mov [r0],r1 ;volta a definir q nao existe nenhum monstro ativo
+	
 	MOV R0, estado_programa ; MOVe o endereco do estado_programa para R0
 	MOV R1, estado_Criar_Tetra 	; Atualiza R1 com o valor do estado jogar
 	MOVB [R0], R1 			; Atualiza o valor do estado_programa para o estado atual (estado jogar)
@@ -526,16 +549,19 @@ Preparar_jogo:
 ; * Rotina que permite a criacao das pecas quando necessario
 ; *********************************************************************************
 Criar_tetra:
+	AND R0,R0 ; pus isto aki disto um problema do PEPE q devez em quando n faz o push 0
 	PUSH R0
 	PUSH R1
 	PUSH R2
 	PUSH R3
 	PUSH R8
 	Push R9
+	PUSH R10
 	;MOV R1, adr_x
 	;MOV R0,0
 	;MOV [R1], R0 			; mete a posicao padrao para ser escrita
 	;MOV R0,0
+	call apagar_linha ;vai ver se existe alguma linha completa 
 	MOV R1,1
 	MOV [R0],R1 ;vai indicar que vamos criar um tetramino para jogarmos
 	MOV R1, adr_Nr_random
@@ -572,12 +598,19 @@ write_tab_tetra:
 	MOV [R0], R1 			; escreve a tabela rotacao de tetra em adr_tetra_tipo
 	MOV R0, adr_tetra_rot 	; para registar na memoria o valor inicial da rotacao
 	MOV R1, 0H
-
 	MOV [R0], R1; rotacao inicial de tetra
+	call load_tetra_x_y_rot_teste
+	call verifica_desenhar
+	AND R10,R10
+	JZ criar_tetra_gameover
 	MOV R9,1 ;Modo Escreve
 	call desenhar_tetra
 	EI0
 random_monstro:
+	MOV R0,monstro_ativo ;tab memoria q indica se ja existe um monstro ativo
+	MOV r1,[r0]
+	and r1,r1 ;se ja existe um monstro ativo no jogo
+	jnz fim_Criar_Tetra ;nao cria novo monstro
 	MOV R1, adr_Nr_random
 	MOV R0, [R1] 			; Nr aleatorio
 	MOV R1, mascara_2_3bits
@@ -586,7 +619,11 @@ random_monstro:
 	jz criar_monstro
 	jmp fim_Criar_Tetra
 criar_monstro:
-	;DI ;visto que vamos mexer na tabela do tetra mino atual
+	
+	MOV R0,monstro_ativo ;tab memoria q indica se ja existe um monstro ativo
+	MOV R1,1
+	MOV [r0],R1 ;indica q ja existe um monstro ativo
+	
 	MOV R0, adr_x_monstro
 	MOV R1, 21
 	MOVB [R0],R1
@@ -594,10 +631,19 @@ criar_monstro:
 	call desenhar_monstro
 	EI1
 	jmp fim_Criar_Tetra
+	
+criar_tetra_gameover:
+	MOV R0, teclado_Jumper_FLAG
+	MOV R1, [R0]
+	SET R1, 3 ;Mete no Jumper flag a flag que forca o game over
+	;mete a mesma o modo jogo,pois sera no modo jogo q o teclado_Jumper_FLAG sera processado
+	MOV [R0],R1
+	
 fim_Criar_Tetra:
 	MOV R0, estado_programa ; Meter em R0 o endereco do estado_programa
 	MOV R1, estado_Jogo ; Meter em R1 o valor do estado suspender 
 	MOVB [R0], R1 ; Mover para o estado_programa o estado atual
+	POP R10
 	POP R9
 	POP	R8
 	POP R3
@@ -621,13 +667,13 @@ esperar_tecla_jogo:
 	MOVB R2,[R0] ; R2 com o valor da tecla carregada da memoria
 	MOV R3, tecla_pausa ; Mete em R3 o valor da tecla de pausa
 	CMP R2, R3 ; Verifica se e a tecla de pausa
-	JNZ verif_tecla_terminar ; Se nao for a tecla de pausa verifica se e a de terminar
+	JNZ verif_tecla_gameover ; Se nao for a tecla de pausa verifica se e a de terminar
 	MOV R0, estado_programa ; Meter em R0 o endereco do estado_programa
 	MOV R1, estado_Suspender ; Meter em R1 o valor do estado suspender 
 	MOVB [R0], R1 ; Mover para o estado_programa o estado atual
 	JMP jogo_fim ; Sai do modo jogo
-verif_tecla_terminar:
-	MOV R3, tecla_terminar ; R3 com o valor da tecla de terminar
+verif_tecla_gameover:
+	MOV R3, tecla_gameover ; R3 com o valor da tecla de terminar
 	CMP R2, R3 ; Verifica se e a tecla de terminar
 	JNZ verif_tecla_suspender ; Se nao for espera por uma nova tecla	
 	MOV R0, estado_programa ; Meter em R0 o endereco do estado_programa
@@ -665,8 +711,13 @@ verif_tecla_esquerda:
 verif_tecla_descer:
 	MOV R3, tecla_descer ; R3 com o valor da tecla para descer
 	CMP R2, R3 ; Verifica se e a tecla de mover para a esquerda
-	JNZ esperar_tecla_jogo ; Espera por uma tecla
+	JNZ verif_tecla_sair_estado ; Ira forcar a saida do modo Jogo
 	CALL descer_tetra ; Chama a rotina para descer o tetramino
+verif_tecla_sair_estado:
+	MOV R3, tecla_sair_estado
+	CMP R2, R3 ; Verifica se e a tecla de forcar a saida do modo jogo
+	JNZ esperar_tecla_jogo ; Caso n for nenhuma das teclas continuar a espera por tecla
+	JMP jogo_fim ;Sai do modo jogo
 jogo_fim:
 	Pop R9
 	POP R8
@@ -863,8 +914,9 @@ teclado:
 	push R5
 	push R6
 	push R8
-
+	push R10
 	call definir_Linha
+	pop R10
 	pop R8
 	pop r6					; Retorna registos
 	pop r5
@@ -872,6 +924,7 @@ teclado:
 	pop r3
 	pop r2
 	pop r1
+	ret
 	
 ;definir_
 definir_Linha:             	; Redifine a linha quando o shr chegar a 0
@@ -885,8 +938,13 @@ definir_Linha:             	; Redifine a linha quando o shr chegar a 0
 	
 call_Jumper_Flag:
 	call Jumper_FLAG
+	CMP R10,forcar_saida ;Ver se a saida do Jumper_FLAG e forcar a saida para o loop de estado
+	jz forcar_saida_estado
 	jmp definir_Linha
 	
+forcar_saida_estado:
+	MOV R6, tecla_sair_estado ;carrega uma tecla inacessivel no teclado que ira fazer ir para o loop estado
+	jmp gravar_Mem_Teclado ;e vai gravar na memoria como se tivesse sido pressionada
 scan_Teclado:              	; Rotina que lê o teclado 
 
 	MOV  R2, out_Teclado   	; R2 fica com o valor 0C000H(porto de escrita)
@@ -911,17 +969,7 @@ alterar_Flag_T_Press:
 	MOV R2,0 ;Definir tecla nao clicada
 	MOV [R3],R2
 	jmp definir_Linha
-;estado_Tecla:              ; Verifica se alguma tecla foi clicada durante o varrimento
-;	and  R5,R5			   	; Afeta as flags
-;	jz   verificar_Ciclo   	; Se tecla nao premida 
-;	MOV  R6,1              	; Se uma tecla foi clicada, define um valor que representa q o display_Inativo ainda não correu
-;	jmp  definir_Linha
-	
-;verificar_Ciclo:
-;	and  R6,R6             	; Verifica se o display_Inativo já correu
-;	jnz  display_Inativo   	; Vai mostrar que nenhuma tecla desta linha foi premida
-;	MOV  R5, OFF
-;	jmp  definir_Linha     	; Verificar se a tecla premida esta na proxima linha
+
 
 tecla_Pressionada:         	; Verifica qual a tecla premida
 	MOV r5, 0 			   	; Redifinir contadores
@@ -956,19 +1004,82 @@ gravar_Mem_Teclado:
 	ret
 
 ;###########################################################	
-	
-display_Inativo:           	; Ecra mostra que nao ha tecla premida
+; **********************************************************************
+; * escreve o valor no ecra segmentos
+; *  Desenha ou apaga um pixel no ecrã com base nas linhas e colunas
+; *Entradas:
+; *  R10 - Valor a somar(nao e capaz de somar valores superiores a 5)
+
+; *Saídas:
+; *  Nenhuma
+; **********************************************************************
+soma_ecra_segmentos:
 	push R0				   	; Guarda registos
-	push R9
-	;MOV  R0, local_Segmentos ; Volta ao endereço 0A000H
-	MOV  R1, 255           	; Corresponde ao valor FF no ecra
-	MOVb [R0],R9           	; Escreve no local_Segmentos
-	pop  R9				   	; Retorna registos
+	push R1
+	push R2
+	push R3
+	push R4
+	push R10
+	mov R1,0 ;contador caso aconteca descrepancia na base das unidades 
+	MOV  R0, pontuacao   ; vai buscar o endereco da pontuacao 
+	movb r2,[r0] ;le a pontuacao
+	add r2,r10 ;adiciona a r2 o valor que queriamos somar
+	mov r3,mascara_bits_0_3 
+	and r3, r2   ;isola o ecra das unidades
+	mov r4,valor_max_decimal
+	sub r3,r4 ;sub o valor max da base decimal(10)
+	jnn ultrapassa_unidades ;caso o valor das unidades ultrapasse a base decimal
+	jmp gravar_pontuacao
+ultrapassa_unidades:
+
+	add R1,1 ;conta 1 unidade que saio da base decimal
+	sub r3,1 ; vai subtrair ate as unidades a mais chegarem a 0
+	jnz ultrapassa_unidades
+	sub r1,1 ;subtrai valor a mais devido a contagem
+	mov r3,mascara_bits_4_7 
+	and r2,r3 ;isola o ecra das dezenas
+	mov r4,10H
+	add r2, r4 ; adiciona 1 dezena
+	add r2, r1 ;adiciona as unidades certas
+	
+	mov r3, mascara_bits_6_7
+	and r3,r2 ;isola apenas os numeros hexadecimais
+	jnz gameover_pontuacao ;representa se a pontuacao ultrapassou os 99 pontos
+	jmp gravar_pontuacao
+
+gravar_pontuacao:
+	MOVb [R0],R2           ; grava nova pontuacao na memoria
+	mov R0,local_Segmentos ;vai buscar o enderesso do ecra de segmentos
+	MOVb [R0],R2           ; Escrever no display o valor da tecla	
+	jmp fim_soma_ecra_segmentos
+	
+gameover_pontuacao:
+	MOV R0, teclado_Jumper_FLAG
+	MOV R1, [R0]
+	SET R1, 3 ;Mete no Jumper flag a flag que forca o game over
+	
+	MOV [R0],R1
+
+
+fim_soma_ecra_segmentos:
+	
+	pop R10
+	pop R4
+	pop R3
+	pop  R2				   ; Retorna registos
+	pop  R1
 	pop  R0
-	;MOV  R6,0              ; O ciclo do ecra inativo ja foi corrido
-	;MOV  R5,OFF; Sem tecla premida
-	jmp  definir_Linha
-;##### Recebe R1
+	ret
+
+; **********************************************************************
+; * escreve o valor no ecra segmentos
+; *  Desenha ou apaga um pixel no ecrã com base nas linhas e colunas
+; *Entradas:
+; *  R1 - Valor a escrever 
+
+; *Saídas:
+; *  Nenhuma
+; **********************************************************************
 ecra_segmentos:             ; Mostra que tecla foi premida, no ecra de segmentos
 	push R0				   	; Guarda registos
 	push R1
@@ -978,7 +1089,6 @@ ecra_segmentos:             ; Mostra que tecla foi premida, no ecra de segmentos
 	pop  R2				   ; Retorna registos
 	pop  R1
 	pop  R0
-	;MOV  R6,1			   ; Define um valor que representa que a tecla ja foi representada no ecra
 	ret
 
 ; **********************************************************************
@@ -989,35 +1099,68 @@ ecra_segmentos:             ; Mostra que tecla foi premida, no ecra de segmentos
 ; *  R2 - endereco da memoria para teclado_Jumper_FLAG
 ; *  R3 - valor do teclado_Jumper_FLAG
 ; *Saídas:
-; *  Nenhuma
+; *  R10-1-caso forcar saida para loop de estados
 ; **********************************************************************
 Jumper_FLAG:
 	push R2
 	PUSH R3
 	PUSH R4
+	MOV R10,0 ;Carrega a saida da routina como 0 
 	MOV R4,mascara_bit0 ;vai buscar o bit 0 do teclado_Jumper_FLAG
 	AND R4,R3
 	JNZ call_descer_tetra ; que representa a flag do descer_tetra
 	MOV R4, mascara_bit1 ;vai buscar o bit 1
 	AND R4,R3
 	JNZ call_mover_monstro; que representa a flag do descer_tetra
-	MOV R4, mascara_bit2 ;vai buscar o bit 1
+	MOV R4, mascara_bit2 ;vai buscar o bit 2
 	AND R4,R3
 	JNZ clear_flag_tecla; que representa a flag de que uma tecla esta presisonada
+	MOV R4, mascara_bit3 ;vai buscar o bit 3
+	AND R4,R3
+	JNZ force_gameover; que representa a flag de forcar modo gameover
+	MOV R4, mascara_bit4 ;vai buscar o bit 3
+	AND R4,R3
+	JNZ force_Criar_Tetra; que representa a flag de forcar modo Criar Tetra
 	jmp fim_JUMPER
 	
 call_mover_monstro:
 	CLR R3,1
+	mov [R2],R3 		;Gravar alteracoes na Jumper_FLAG
 	call mover_monstro
 	jmp fim_JUMPER
 call_descer_tetra:
 	CLR R3,0
+	mov [R2],R3 		;Gravar alteracoes na Jumper_FLAG
 	call descer_tetra
 	jmp fim_JUMPER
 clear_flag_tecla:
 	CLR R3,2
+	mov [R2],R3 		;Gravar alteracoes na Jumper_FLAG
+	jmp fim_JUMPER
+
+force_gameover:
+	CLR R3,3
+	mov [R2],R3 		;Gravar alteracoes na Jumper_FLAG
+	MOV R2, estado_Gameover 	; Atualiza R2 com o estado novo (estado Gameover)
+	MOV R4, estado_programa ; Atualiza R4 com o endereco do estado programa
+	MOVb [R4], R2 			; Atualiza o estado programa com o valor do estado atual (estado Gameover)
+	MOV R10,forcar_saida ;Carrega a saida da rotina de modo a forcar saida do estado atual para o loop de estado
+	jmp fim_JUMPER
+	
+force_Criar_Tetra:
+	CLR R3,4
+	mov [R2],R3 		;Gravar alteracoes na Jumper_FLAG
+	MOV R2, estado_Criar_Tetra 	; Atualiza R2 com o estado novo (estado criar tetramino)
+	MOV R4, estado_programa ; Atualiza R4 com o endereco do estado programa
+	MOVb [R4], R2 			; Atualiza o estado programa com o valor do estado atual (estado criar tetramino)
+	MOV R10,forcar_saida ;Carrega a saida da rotina de modo a forcar saida do estado atual para o loop de estado
+	jmp fim_JUMPER
+	
+
+	
+	
 fim_JUMPER:
-	mov [R2],R3
+	
 	POP R4
 	POP R3
 	POP R2
@@ -1245,8 +1388,10 @@ rodar_tetra:
 	push R0
 	push R1
 	push R2
+	push R3
+	push R8
 	push R9
-	
+	push R10
 	
 	MOV R0,Flag_Tecla_Pressionada 
 	mov R1,[R0]
@@ -1265,17 +1410,30 @@ rodar_tetra:
 	CMP R1,R2
 	jz redefinir_rot_tetra
 	ADD R1,1 
-	jmp set_rot_tetra
+	jmp verificar_rodar
 redefinir_rot_tetra:
 	MOV R1,0 ;Faz reset a rotacao
+	jmp verificar_rodar
+	
+verificar_rodar:
+	call load_tetra_x_y_rot_teste
+	
+	mov R3,adr_tetra_rot_teste
+	mov [R3],R1
+	call verifica_desenhar
+	AND R10,R10
+	jz fim_rot_tetra
 	jmp set_rot_tetra
 	
 set_rot_tetra:
 	MOV [R0],R1
+fim_rot_tetra:
 	MOV R9,1 ;MODO escrever peca
 	CALL desenhar_tetra
-fim_rot_tetra:
+	pop R10
 	pop R9
+	pop R8
+	pop R3
 	pop R2
 	pop R1
 	pop R0
@@ -1294,16 +1452,14 @@ fim_rot_tetra:
 descer_tetra:
 	push R0
 	push R1
+	push R8
 	push R9
-	
+	push R10
 
 	mov R9,0 ;apagar posicao atual tetra
 	call desenhar_tetra
 
-	mov R0, adr_x
-	mov R9, adr_x_teste
-	movb R1,[R0]
-	movb [R9],R1
+	call load_tetra_x_y_rot_teste
 	
 	mov R0, adr_y
 	mov R9, adr_y_teste
@@ -1311,24 +1467,110 @@ descer_tetra:
 	add R1,1
 	movb [R9],R1
 	
-	movb [R0],R1
+	;movb [R0],R1
 	
 	call verifica_desenhar
 	AND R10,R10
-	JZ fim_descer	
+	JZ criar_novo_tetra_flag	
 	
 	
 	
 	movb [R0],R1
 	
-	mov R9,1
-	call desenhar_tetra
+	mov R9,1 ;para desenhar o tetramino
+	jmp fim_descer
+	
+	
+
+	
+	
+criar_novo_tetra_flag:
+	
+	
+	
+	MOV R0, teclado_Jumper_FLAG
+	MOV R1, [R0]
+	SET R1, 4
+	
+	MOV [R0],R1
+	call verificar_matou_monstro
+	AND R10,R10
+	jnz se_matou_monstro ;se matou o monstro
+	mov R9,1 ;para desenhar o tetramino
+	jmp fim_descer
+se_matou_monstro:
+	mov R9,0 ;para apagar o tetramino
+	call ecra_linhalateral
+	
 fim_descer:	
+	
+	call desenhar_tetra
+	POP R10
 	pop R9
+	POP R8
 	pop R1
 	pop R0
 	ret
 	
+	
+; **********************************************************************
+; Verificar se matou monstro
+;   Rotina que faz uma pausa.
+; Entradas:
+; 
+; *  R8 - Linha a verificar
+; *  R9 - Coluna a verificar
+; Saidas:
+;   R10, 2 se matou, 0 se n
+; **********************************************************************
+verificar_matou_monstro:
+    PUSH  R1 ; Guarda R1
+    PUSH  R2 ; Guarda R2
+    PUSH  R4 ; Guarda R4
+    PUSH  R8 ; Guarda R8
+	PUSH R9
+	
+
+	MOV R10,0 ;Caso n for alterado indica q o mosntro n foi morto
+	MOV R1,const_y_monstro
+
+	CMP R8, R1 ; Se o y for igual ao do monstro 
+	JZ verificar_x ; vai verificar se o x esta alinhado com o monstro
+	jmp fim_verif_m_monstro
+	
+verificar_x:
+	MOV R4,R9 ;backup do y do tetramino
+	MOV R1,adr_x_monstro
+	MOV R2,[R1] ;x do monstro
+	ADD R2,3 ;x max onde ja nao e monstro
+	SUB R4,R2
+	JNN fim_verif_m_monstro ;se for superior ao x maximo ent n matou
+	SUB R2,4 ;x min q ja n pertence ao monstro
+	SUB R9,R2
+	JNN fim_verif_m_monstro ; se x for inferior ao x minimo ent n matou
+	
+	DI1
+	
+	MOV R9,monstro_ativo ;endereco do valor q indica se um monstro se econtra ativo
+	MOV R1,0
+	MOV [R9],R1 ;ira indicar q o monstro ja n se encontra ativo
+	
+	MOV R9,0 ;ira apagar o monstro atual 
+	call desenhar_monstro
+	
+	MOV R10,2  ;ira somar 2 a pontuacao
+	call soma_ecra_segmentos
+	
+
+fim_verif_m_monstro:
+	
+	POP R9
+	POP R8
+	POP R4
+	POP R2
+	POP R1
+	RET
+
 ; **********************************************************************
 ; Verificar Pixel
 ;   Rotina que faz uma pausa.
@@ -1351,7 +1593,7 @@ verificar_pixel:
     PUSH  R6 ; Guarda R6
     PUSH  R7 ; Guarda R7
     PUSH  R8 ; Guarda R8
-	PUSH R10
+	
 	MOV R0, local_Ecra ; Atualiza R0 com o endereco do ecra
 	MOV R4, 4 ; Atualiza R4 com o numero de bytes de cada linha do ecra (linhas)
 	MOV R5, 8 ; Atualiza R5 com o numero de bits por byte do ecra (colunas)
@@ -1377,7 +1619,6 @@ verif_pintado:
 nao_pode_pintar:
 	MOV R10, 0
 fim_verificar_pixel:
-	POP R10
     POP R8 ; Devolve R8
     POP R7 ; Devolve R7
     POP R6 ; Devolve R6
@@ -1396,6 +1637,8 @@ fim_verificar_pixel:
 ; Entradas:
 ;   Nenhuma
 ; Saidas:
+;	R8 -linha
+; 	R9 -coluna q n pode ser escrita
 ;   R10 - 1 (Pode desenhar) ou 0 (Nao pode desenhar)
 ; **********************************************************************
 
@@ -1408,11 +1651,11 @@ verifica_desenhar:
     PUSH  R5 ; Guarda R5
     PUSH  R6 ; Guarda R6
     PUSH  R7 ; Guarda R7
-    PUSH  R8 ; Guarda R8
+    
 
 	MOV R0, adr_tetra_tipo
 	MOV R1,[R0]
-	MOV R0, adr_tetra_rot
+	MOV R0, adr_tetra_rot_teste
 	MOV R2, [R0]
 	shl R2,1 ; multiplica por 2
 	add R1,R2 ;endereco tabela final
@@ -1421,20 +1664,23 @@ verifica_desenhar:
 	MOVB R4,[R0] ;linha
 	add R0,1 ;adr coluna
 	MOVb R5,[R0];coluna
-	MOV R8, adr_y_teste ; Atualiza R0 com o valor correspondente a linha inicial onde desenhar o tetramino
+	MOV R8, adr_y_teste 				;MALL ALTERAR AQUI E NOS OURTOS LADOS E COLUNA; Atualiza R0 com o valor correspondente a linha inicial onde desenhar o tetramino
 	MOVB R2, [R8] ; Mete em R2, o valor da linha onde comecar a desenhar
 	MOV R8, adr_x_teste ; Acede a tabela que contem as posicoes 
 	MOVB R3, [R8] ; Mete em R3, o valor da coluna onde comecar a desenhar
-	MOV R8, 12 ; Valor limite nas colunas
-	MOV R7, R3 ; Duplica o valor das colunas para testar
+	MOV R8, 13 ; Valor limite nas colunas
+	MOV R7, R3 ; 
 	ADD R7, R5 ; Adiciona a coluna a testar o numero de colunas da tabela
 	CMP R8, R7 ; Se for igual nao desenha
 	JZ nao_pode ; Salta para nao desenhar
-	MOV R8, 0 ; Valor limite nas colunas
+	MOV R8, 0FFH ; Valor limite nas colunas
+	
 	CMP R8, R3 ; Se for igual nao desenha
 	JZ nao_pode ; Salta para nao desenhar
-	MOV R8, 32 ; Valor limite das linhas
-	CMP R8, R2 ; Se for igual nao desenha
+	MOV R8, 21H ; Valor limite das linhas
+	MOV R7,R2 
+	ADD R7,R4 ;adicionar o nr de linhas de modo a verificar o y max em q quer escrever
+	CMP R8, R7 ; Se for igual nao desenha
 	JZ nao_pode ; Salta para nao desenhar
 	MOV R7, R4 ; Duplica o valor das linhas em registo para criar 1 contador
 	MUL R7, R5 ; Multiplica o valor das linhas pelas colunas, para criar 1 contador do numero de elementos da tabela
@@ -1452,6 +1698,7 @@ loop_testar_tetra:
 	CALL verificar_pixel ; Chama a rotina que verifica 1 pixel da tabela de strings, e ve se esta desenhado ou nao
 	AND R10, R10
 	JZ nao_pode
+	;call desenhar_pixel ;Debuggin purposes
 nao_testar:
 	Sub R7,1 ; Atualiza o contador
 	JZ pode ; Se ainda nao acabou corre outra vez
@@ -1461,12 +1708,16 @@ nao_testar:
 	JMP loop_testar_tetra
 nao_pode:
 	MOV R10, 0
+	MOV R8,R2 ;linha 
+	MOV R9,R3 ;e coluna q nao podem ser escritos
 	JMP fim_verifica_desenhar
 pode:
 	MOV R10, 1
+	MOV R8,0 ;retornara linha 
+	MOV R9,0 ;e coluna sem significado
 fim_verifica_desenhar:
 	
-    POP R8 ; Devolve R8
+    
     POP R7 ; Devolve R7
     POP R6 ; Devolve R6
     POP R5 ; Devolve R5
@@ -1478,7 +1729,101 @@ fim_verifica_desenhar:
     RET ; Termina rotina
 
 	
+	
+	
 ; **********************************************************************
+; apaga LINHA
+;   ve se existe uma linha toda vermelha
+; Entradas:
+; *  
+; *  
+; *  
+; Saidas:
+;   R10 - 1, se pode desenhar 0, se n pode
+; **********************************************************************
+
+
+apagar_linha:
+	PUSH R0
+	PUSH R1
+	PUSH R2
+	PUSH R3
+	PUSH R4
+	PUSH R5
+	PUSH R6
+	PUSH R10
+	MOV R0, local_Ecra ; R0 com o endereco do ecra
+	MOV R1, elem_Ecra ; Numero total de bytes do ecra
+	MOV R2, 255 ; Mascara para testar o primeiro byte
+	MOV R3, 240 ; Mascara para testar metade do byte
+	MOV R6, 2 ; Valor de bytes necessarios preenchidos para apagar a linha
+	SUB R0, 1
+loop_byte:
+	ADD R0, 1
+	MOV R5, 0 ; Contador para ver se sao 1 byte e meio preenchidos
+	MOVB R4, [R0] ; R4 com o conteudo de 1 byte do ecra
+	SUB R1, 1 ; Atualiza o contador de bytes
+	CMP R4, R2 ; Verifica se a linha esta toda preenchida
+	JNZ loop_meiobyte ; Se nao estiver toda preenchida passa o proximo byte
+	ADD R5, 1 ; Adiciona 1 ao contador se o byte estiver preenchido
+loop_meiobyte:
+	ADD R0, 1 ; Acede ao byte seguinte do ecra
+	MOVB R4, [R0] ; R4 com o conteudo de 1 byte do ecra
+	AND R4, R3
+	SUB R1, 1 ; Atualiza o contador de bytes
+	CMP R4, R3 ; Verifica se metade esta preenchida
+	JNZ loop_add2 ; Se nao estiver preenchido passa de linha
+	ADD R5, 1 ; Atualiza o contador de bytes preenchidos
+	CMP R5, R6 ; Verifica se estao 2 bytes preenchidos
+	JZ apagar ; Se estiverem 2 bytes preenchidos salta para apagar a linha
+loop_add2:
+	ADD R0, 2 ; Passa a frente dos 2 bytes
+	SUB R1, 2 ; Atualiza o contador de bytes
+	JZ fim_apagar_linha ; Se ja testou os bytes todos acaba
+	JMP loop_byte ; Volta a correr o loop ate ja ter testado todos os bytes
+apagar:
+	MOV R5, 08H ; Valor a escrever para apagar meio byte
+	MOVB [R0], R5 ; Apaga os bits de maior valor do 2 byte da linha
+	SUB R0, 1 ; Acede ao byte anterior
+	MOV R5, 00H ; Valor a escrever para apagar o byte
+	MOVB [R0], R5 ; Apaga o byte
+	ADD R0, 1 ; Acede ao byte seguinte para voltar ao normal
+	Mov r6,r0 ;guardar localizao ultimo byte em r2
+	MOV R10,5 ;vai adicionar 5 pontos no ecra de segmentos
+	call soma_ecra_segmentos
+	MOV R0, local_Ecra ; R0 com o endereco do ecra
+	
+	mov R1,r6
+	sub R1,4 ;a linha a cima do R0
+	
+	JMP baixar_linhas ; Vai para o loop para continuar a testar as linhas
+	
+baixar_linhas:
+	movb r2,[r1]
+	movb [r6],r2 ;vai por byte na linha a seguir
+	sub r6,1 ; vai para o byte seguinte
+	sub r1,1 ; vai para o byte seguinte
+	movb r2,[r1]
+	movb [r6],r2 ;vai por byte na linha a seguir
+	cmp r1,r0 ; vai verificar se ja chegamos ao fim da linha
+	jz fim_apagar_linha
+	sub r6,3 ; vai para a linha seguinte ignorando os bytes q nao queremos alterar
+	sub r1,3 
+	jmp baixar_linhas
+	
+fim_apagar_linha:
+	POP R10
+	POP R6
+	POP R5
+	POP R4
+	POP R3
+	POP R2
+	POP R1
+	POP R0
+	RET
+
+	
+	; **********************************************************************
 ; Mover Monstro
 ;   Rotina que faz uma pausa.
 ; Entradas:
@@ -1496,16 +1841,21 @@ mover_monstro:
 	mov R0, adr_x_monstro
 	movb R1,[R0]
 	sub R1,1
-	jz monstro_gameover
+	
 	movb [R0],R1
 	mov R9,1
 	call desenhar_monstro
+	AND R1,R1 ; Fazemos este compare depois de desenhar o mosntro para afetar as flags
+	jz monstro_gameover ; e permitir a visualizacao do monsto chegar ao fim antes do gameover
 	jmp monstro_fim
 monstro_gameover:
-	MOV R2, estado_Gameover 		; Atualiza R2 com o estado novo (estado preparar jogo)
-	MOV R1, estado_programa ; Atualiza R1 com o endereco do estado programa
-	MOV [R1], R2 			; Atualiza o estado programa com o valor do estado atual (estado jogar)
 
+	MOV R0, teclado_Jumper_FLAG
+	MOV R1, [R0]
+	SET R1, 3 ;Mete no Jumper flag a flag que forca o game over
+	
+	MOV [R0],R1
+	
 monstro_fim:
 	pop R9
 	pop R2
@@ -1529,6 +1879,8 @@ mover_tetramino:
 	PUSH R4
 	PUSH R5
 	PUSH R6
+	PUSH R7
+	PUSH R8
 	PUSH R9
 	
 	
@@ -1575,8 +1927,9 @@ mover:
 	;MOVB R4, [R0] ; R4 com o valor correspondente ao numero de linhas da tabela
 	;ADD R0, 1 ; Acede ao proximo elemento da tabela de strings
 	;MOVB R5, [R0] ; R5 com o valor correspondente ao numero de colunas da tabela
-	
-	
+	CALL load_tetra_x_y_rot_teste
+	MOV R7,adr_x_teste
+	MOVB [R7],R3
 	CALL verifica_desenhar ; Chama a rotina que verifica se pode desenhar, se R11 for 0 nao pode, se for 1 pode
 	AND R10, R10 ; (O registo depende da funcao verifica_desenhar)
 	JZ fim_mover_tetra ; Se nao poder desenhar acaba
@@ -1588,6 +1941,8 @@ fim_mover_tetra:
 	MOV R9, 1 ; Mete em R9 1 valor para decidir de desenha ou apaga, se 1 escreve se 0 apaga
 	CALL desenhar_tetra
 	POP R9
+	POP R8
+	POP R7
 	POP R6
 	POP R5
 	POP R4
@@ -1596,6 +1951,39 @@ fim_mover_tetra:
 	POP R1
 	POP R0
 	RET
+; **********************************************************************
+; Carrega a localizacao e rotacao atual do tetramino para as variaveis teste
+;   Rotina que faz uma pausa.
+; Entradas:
+;  
+; Saidas:
+;   Nenhuma
+; **********************************************************************
+load_tetra_x_y_rot_teste:
+	PUSH R0
+	PUSH R1
+	PUSH R2
+	
+	MOV R0, adr_x ; Tabela de posicao atual
+	MOV R1 ,adr_x_teste ; Tabela de posicao teste
+	MOVB R2, [R0] 
+	MOVB [R1],R2 ;Mete o valor na tabela
+	
+	MOV R0, adr_y ; Tabela de posicao atual
+	MOV R1 ,adr_y_teste ; Tabela de posicao teste
+	MOVB R2, [R0] 
+	MOVB [R1],R2 ;Mete o valor na tabela
+	
+	MOV R0, adr_tetra_rot ; Tabela de rotacao atual
+	MOV R1 ,adr_tetra_rot_teste ; Tabela de rotacao teste
+	MOV R2, [R0] 
+	MOV [R1],R2 ;Mete o valor na tabela
+	
+	POP R2
+	POP R1
+	POP R0
+	RET
+	
 ; **********************************************************************
 ; Interrupçao 0
 ;   Rotina que faz uma pausa.
