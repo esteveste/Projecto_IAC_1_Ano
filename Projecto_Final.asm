@@ -51,7 +51,7 @@ tecla_esquerda			EQU 04H
 tecla_descer			EQU 05H
 tecla_sair_estado		EQU 0FFH
 local_Ecra	            EQU 8000H
-
+x_monstro_inicial		EQU 21			
 
 valor_max_decimal		EQU 9
 linha_tetris_completa	EQU 3;nr de bytes q irao ser verificados
@@ -519,6 +519,7 @@ sair_gameover:
 Preparar_jogo:
 	PUSH R0					; Guarda registos
 	PUSH R1
+	EI
 	CALL limpar
 	CALL ecra_linhalateral 	; Chama a rotina para desenhar o limite lateral
 	MOV R1,0 				; valor 00 para mostrar no ecra de segmentos
@@ -625,7 +626,7 @@ criar_monstro:
 	MOV [r0],R1 ;indica q ja existe um monstro ativo
 	
 	MOV R0, adr_x_monstro
-	MOV R1, 21
+	MOV R1, x_monstro_inicial
 	MOVB [R0],R1
 	MOV R9,1
 	call desenhar_monstro
@@ -1106,21 +1107,24 @@ Jumper_FLAG:
 	PUSH R3
 	PUSH R4
 	MOV R10,0 ;Carrega a saida da routina como 0 
+
+	MOV R4, mascara_bit4 ;vai buscar o bit 4, e vem primeiro pk tem prioridade
+	AND R4,R3
+	JNZ force_Criar_Tetra; que representa a flag de forcar modo Criar Tetra
+
 	MOV R4,mascara_bit0 ;vai buscar o bit 0 do teclado_Jumper_FLAG
 	AND R4,R3
 	JNZ call_descer_tetra ; que representa a flag do descer_tetra
 	MOV R4, mascara_bit1 ;vai buscar o bit 1
 	AND R4,R3
-	JNZ call_mover_monstro; que representa a flag do descer_tetra
+	JNZ call_mover_monstro; que representa a flag do mover monstro
 	MOV R4, mascara_bit2 ;vai buscar o bit 2
 	AND R4,R3
 	JNZ clear_flag_tecla; que representa a flag de que uma tecla esta presisonada
 	MOV R4, mascara_bit3 ;vai buscar o bit 3
 	AND R4,R3
 	JNZ force_gameover; que representa a flag de forcar modo gameover
-	MOV R4, mascara_bit4 ;vai buscar o bit 3
-	AND R4,R3
-	JNZ force_Criar_Tetra; que representa a flag de forcar modo Criar Tetra
+
 	jmp fim_JUMPER
 	
 call_mover_monstro:
@@ -1139,7 +1143,8 @@ clear_flag_tecla:
 	jmp fim_JUMPER
 
 force_gameover:
-	CLR R3,3
+	DI ;desativa interrupcoes visto q acaba o jogo
+	MOV R3,0 ;Apagas as flags para nao ocorrerem apos o gameover
 	mov [R2],R3 		;Gravar alteracoes na Jumper_FLAG
 	MOV R2, estado_Gameover 	; Atualiza R2 com o estado novo (estado Gameover)
 	MOV R4, estado_programa ; Atualiza R4 com o endereco do estado programa
@@ -1455,7 +1460,7 @@ descer_tetra:
 	push R8
 	push R9
 	push R10
-
+	;DI ;desativa as interrupcoes para nao ocorrer problemas quando se apaga o monstro e o tetramino
 	mov R9,0 ;apagar posicao atual tetra
 	call desenhar_tetra
 
@@ -1499,8 +1504,14 @@ criar_novo_tetra_flag:
 	mov R9,1 ;para desenhar o tetramino
 	jmp fim_descer
 se_matou_monstro:
+	MOV R0,adr_x_monstro
+	mov R1,x_monstro_inicial;vai meter o x do monstro de novo na posicao inicial 
+	MOV [R0],R1 ;para nao ocorrer falsas verificacoes apos o monstro morrer
 	mov R9,0 ;para apagar o tetramino
 	call ecra_linhalateral
+	
+	
+	
 	
 fim_descer:	
 	
@@ -1534,22 +1545,30 @@ verificar_matou_monstro:
 	MOV R10,0 ;Caso n for alterado indica q o mosntro n foi morto
 	MOV R1,const_y_monstro
 
-	CMP R8, R1 ; Se o y for igual ao do monstro 
+	CMP R8, R1 ; Se o y for igual aos quadrados superiores do monstro 
+	JZ verificar_x ; vai verificar se o x esta alinhado com o monstro
+	ADD R1,1 ;Para ver se tocou no quadrado mais pequeno
+	CMP R8, R1 ; Se o y for igual ao quadrado inferior do monstro 
 	JZ verificar_x ; vai verificar se o x esta alinhado com o monstro
 	jmp fim_verif_m_monstro
 	
 verificar_x:
 	MOV R4,R9 ;backup do y do tetramino
 	MOV R1,adr_x_monstro
-	MOV R2,[R1] ;x do monstro
+	MOVb R2,[R1] ;x do monstro
 	ADD R2,3 ;x max onde ja nao e monstro
 	SUB R4,R2
 	JNN fim_verif_m_monstro ;se for superior ao x maximo ent n matou
 	SUB R2,4 ;x min q ja n pertence ao monstro
-	SUB R9,R2
+	SUB R2,R9
 	JNN fim_verif_m_monstro ; se x for inferior ao x minimo ent n matou
 	
 	DI1
+	
+	MOV R9,teclado_Jumper_FLAG
+	MOV R1,[R9]
+	CLR R1,1 ;vai apagar a flag q mexe o montro
+	MOV [R9],R1 ;visto q ja n ta ativo
 	
 	MOV R9,monstro_ativo ;endereco do valor q indica se um monstro se econtra ativo
 	MOV R1,0
