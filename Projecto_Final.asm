@@ -1351,6 +1351,7 @@ verificar_pixel:
     PUSH  R6 ; Guarda R6
     PUSH  R7 ; Guarda R7
     PUSH  R8 ; Guarda R8
+	PUSH R10
 	MOV R0, local_Ecra ; Atualiza R0 com o endereco do ecra
 	MOV R4, 4 ; Atualiza R4 com o numero de bytes de cada linha do ecra (linhas)
 	MOV R5, 8 ; Atualiza R5 com o numero de bits por byte do ecra (colunas)
@@ -1376,6 +1377,7 @@ verif_pintado:
 nao_pode_pintar:
 	MOV R10, 0
 fim_verificar_pixel:
+	POP R10
     POP R8 ; Devolve R8
     POP R7 ; Devolve R7
     POP R6 ; Devolve R6
@@ -1447,7 +1449,6 @@ loop_testar_tetra:
 	MOVB R1, [R0] ; R1 com o valor a escrever no ecra
 	AND R1, R1 ; Afeta as flags
 	JZ nao_testar ; Se for um 0 nao testa
-	MOV R1,1
 	CALL verificar_pixel ; Chama a rotina que verifica 1 pixel da tabela de strings, e ve se esta desenhado ou nao
 	AND R10, R10
 	JZ nao_pode
@@ -1478,7 +1479,7 @@ fim_verifica_desenhar:
 
 	
 ; **********************************************************************
-; Interrupçao 0
+; Mover Monstro
 ;   Rotina que faz uma pausa.
 ; Entradas:
 ;  
