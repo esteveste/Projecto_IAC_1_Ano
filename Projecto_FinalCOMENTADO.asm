@@ -80,7 +80,7 @@ sequencia_tetraminoT 	EQU 02H		 ; Valor atribuido a sequencia de variantes tetra
 sequencia_tetraminoS 	EQU 03H		 ; Valor atribuido a sequencia de variantes tetraminos S
 sequencia_monstro 		EQU 00H		 ; Valor atribuido a sequencia do monstro
 valor_rot_Max			EQU 3		 ; Valor de rotacoes permitidas ate reiniciar (0, 1 , 2 ,3)
-
+valor_apos_decimal		EQU 0A0H 	 ; 1 valor que excede a base decimal na base hexadecimal
 ; ***********************************************************************
 ; * Ecras
 ; ***********************************************************************
@@ -532,7 +532,7 @@ Preparar_jogo:
 ; * Rotina que permite a criacao das pecas quANDo necessario
 ; *********************************************************************************
 Criar_tetra:
-	AND R0,R0 ; BUG pepe
+	AND R0,R0 ; BUG pepe, por vezes o pepe nao excuta o PUSH R0 deixo o professor testar por si proprio ao comentar este codigo
 	PUSH R0					; Guarda Registos
 	PUSH R1
 	PUSH R2
@@ -953,31 +953,44 @@ soma_ecra_segmentos:
 	PUSH R2
 	PUSH R3
 	PUSH R4
+	PUSH R5
 	PUSH R10
 	MOV R1,0 				; Contador caso aconteca descrepancia na base das unidades 
 	MOV  R0, pontuacao   	; Vai buscar o endereco da pontuacao 
 	MOVB R2,[R0] 			; Le a pontuacao
 	ADD R2,R10 				; Adiciona a R2 o valor que queriamos somar
-	MOV R3,mascara_bits_0_3 ; Mete em R3 a mascara que isola os primeiros 4 bits
-	AND R3, R2   			; Isola o ecra das unidades
+	MOV R3,R2
+	MOV R4,mascara_bits_0_3 ; Mete em R3 a mascara que isola os primeiros 4 bits
+	AND R3, R4  			; Isola o ecra das unidades
 	MOV R4,valor_max_decimal
-	SUB R3,R4 				; SUBtrai o valor max da base decimal(10)
-	JNN ultrapassa_unidades ; Caso o valor das unidades ultrapasse a base decimal
-	JMP gravar_pontuacao	; Grava a pontuacao caso nao ultrapasse a base decimal
-ultrapassa_unidades:
-	ADD R1,1 				; Conta 1 unidade que saiu da base decimal
-	SUB R3,1 				; Vai SUBtrair ate as unidades a mais chegarem a 0
-	JNZ ultrapassa_unidades
-	SUB R1,1 				; SUBtrai o valor a mais devido a contagem
-	MOV R3,mascara_bits_4_7 ; Mete em R3 a mascara que isola os ultimos 4 bits (dezenas)
-	AND R2,R3 				; Isola o ecra das dezenas
-	MOV R4,10H				; Valor que permite adicionar 1 dezena
-	ADD R2, R4 				; Adiciona 1 dezena
-	ADD R2, R1 				; Adiciona as unidades certas
-	MOV R3, mascara_bits_6_7 ; Mete em R3 a mascara que isola os ultimos 2 bits
-	AND R3,R2 				; Isola apenas os numeros hexadecimais
-	JNZ gameover_pontuacao 	; Representa se a pontuacao ultrapassou os 99 pontos
+	DIV R3,R4 ;verificar se as unidades ultrapassarem a base decimal
+	JZ gravar_pontuacao ;se a soma nao mexe o digito das dezenas grava
+	
+	
+	MOV R3,R2 ;volta a fazer backup
+	MOV R4, mascara_bits_0_3;vai buscar as unidades
+	AND R3,R4
+	MOV R4,valor_max_decimal;e vamos calcular o resto
+	MOD R3,R4;Obtendo as unidades na base decimal
+	
+	MOV R4, mascara_bits_4_7
+	AND R2,R4 ;isola as dezenas
+	
+	MOV R4,10H
+	ADD R2, R4 ;adiciona 1 dezena visto q ultrapassou a base decimal nas unidades
+	
+	MOV R4,valor_apos_decimal ;vamos verificar  se ja passamos o valor 99
+	CMP R2,R4 ; se o valor das dezenas passar a base decimal
+	JZ gameover_pontuacao 
+	
+
+	add R2,R3 ;adiciona as unidades 
+	
+	
+
+	
 	JMP gravar_pontuacao
+	
 gravar_pontuacao:
 	MOVB [R0],R2           	; Grava nova pontuacao na memoria
 	MOV R0,local_Segmentos 	; Vai buscar o endereco do ecra de segmentos
@@ -990,6 +1003,7 @@ gameover_pontuacao:
 	MOV [R0],R1 			; Mete no Jumper flag a flag que forca o game over
 fim_soma_ecra_segmentos:
 	POP R10				   	; RETorna registos
+	POP R5
 	POP R4
 	POP R3
 	POP R2
