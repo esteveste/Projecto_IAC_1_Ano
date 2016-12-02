@@ -963,34 +963,22 @@ soma_ecra_segmentos:
 	MOV R4,mascara_bits_0_3 ; Mete em R3 a mascara que isola os primeiros 4 bits
 	AND R3, R4  			; Isola o ecra das unidades
 	MOV R4,valor_max_decimal
-	DIV R3,R4 ;verificar se as unidades ultrapassarem a base decimal
-	JZ gravar_pontuacao ;se a soma nao mexe o digito das dezenas grava
-	
-	
-	MOV R3,R2 ;volta a fazer backup
-	MOV R4, mascara_bits_0_3;vai buscar as unidades
-	AND R3,R4
-	MOV R4,valor_max_decimal;e vamos calcular o resto
-	MOD R3,R4;Obtendo as unidades na base decimal
-	
-	MOV R4, mascara_bits_4_7
-	AND R2,R4 ;isola as dezenas
-	
+	DIV R3,R4 				; Verificar se as unidades ultrapassarem a base decimal
+	JZ gravar_pontuacao 	; Se a soma nao altera o digito das dezenas grava
+	MOV R3,R2 				; Volta a fazer backup
+	MOV R4, mascara_bits_0_3 ; Mascara para isolar as unidades
+	AND R3,R4				; Isola as unidades
+	MOV R4,valor_max_decimal ; Mete em R4 o valor maximo decimal
+	MOD R3,R4				; Obtendo as unidades na base decimal
+	MOV R4, mascara_bits_4_7 ; Mascara para isolar as dezenas
+	AND R2,R4 				; Isola as dezenas
 	MOV R4,10H
-	ADD R2, R4 ;adiciona 1 dezena visto q ultrapassou a base decimal nas unidades
-	
-	MOV R4,valor_apos_decimal ;vamos verificar  se ja passamos o valor 99
-	CMP R2,R4 ; se o valor das dezenas passar a base decimal
+	ADD R2, R4 				; Adiciona 1 dezena visto que ultrapassou a base decimal nas unidades
+	MOV R4,valor_apos_decimal ; Vamos verificar  se ja passamos o valor 99
+	CMP R2,R4 				; Se o valor das dezenas passar a base decimal acaba o jogo
 	JZ gameover_pontuacao 
-	
-
-	add R2,R3 ;adiciona as unidades 
-	
-	
-
-	
-	JMP gravar_pontuacao
-	
+	ADD R2,R3 				; Adiciona as unidades
+	JMP gravar_pontuacao	
 gravar_pontuacao:
 	MOVB [R0],R2           	; Grava nova pontuacao na memoria
 	MOV R0,local_Segmentos 	; Vai buscar o endereco do ecra de segmentos
