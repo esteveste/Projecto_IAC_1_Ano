@@ -52,7 +52,7 @@ tecla_descer			EQU 05H		 ; Valor atribuido a tecla para descer o tetramino
 tecla_sair_estado		EQU 0FFH	 ; Valor atribuido a tecla neutra
 local_Ecra	            EQU 8000H	 ; Endereco do pixelscreen
 x_monstro_inicial		EQU 21		 ; Valor inicial da coluna onde desenhar o monstro
-valor_max_decimal		EQU 9		 ; Valor maximo da pontuacao em decimal
+valor_max_decimal		EQU 10		 ; Valor maximo da pontuacao em decimal
 linha_tetris_completa	EQU 3		 ; Valor de bytes a ser testados para verificacao das linhas completas durante o jogo
 forcar_saida			EQU 1		 ; 
 OFF                     EQU 0        ; Valor da tecla nao premida
