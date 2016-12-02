@@ -648,17 +648,9 @@ esperar_tecla_jogo:
 verif_tecla_gameover:
 	MOV R3, tecla_gameover  ; R3 com o valor da tecla de terminar
 	CMP R2, R3 				; Verifica se e a tecla de terminar
-	JNZ verif_tecla_suspender ; Se nao for espera por uma nova tecla	
+	JNZ verif_tecla_rodar ; Se nao for espera por uma nova tecla	
 	MOV R0, estado_programa ; Meter em R0 o endereco do estado_programa
 	MOV R1, estado_Gameover ; Meter em R1 o valor do estado gameover
-	MOVB [R0], R1 			; MOVer para o estado_programa o estado atual
-	JMP jogo_fim 			; Sai do modo jogo
-verif_tecla_suspender:
-	MOV R3, tecla_pausa 	; R3 com o valor da tecla de pausa
-	CMP R2, R3 				; Verifica se e a tecla de suspender
-	JNZ verif_tecla_rodar 	; Se nao for verifica se e a tecla de rodar
-	MOV R0, estado_programa ; Meter em R0 o endereco do estado_programa
-	MOV R1, estado_Suspender  ; Meter em R1 o valor do estado suspender
 	MOVB [R0], R1 			; MOVer para o estado_programa o estado atual
 	JMP jogo_fim 			; Sai do modo jogo
 verif_tecla_rodar:
@@ -686,10 +678,11 @@ verif_tecla_descer:
 	CMP R2, R3 				; Verifica se e a tecla de MOVer para a esquerda
 	JNZ verif_tecla_sair_estado ; Ira forcar a saida do modo Jogo
 	CALL descer_tetra 		; Chama a rotina para descer o tetramino
+	JMP esperar_tecla_jogo  ; Volta a esperar por uma tecla
 verif_tecla_sair_estado:
 	MOV R3, tecla_sair_estado ; Mete em R3 o valor da tecla para sair dos estados
 	CMP R2, R3 				; Verifica se e a tecla de forcar a saida do modo jogo
-	JNZ esperar_tecla_jogo 	; Caso n for nenhuma das teclas continuar a espera por tecla
+	JNZ esperar_tecla_jogo 	; Caso nao for nenhuma das teclas continuar a espera por tecla
 	JMP jogo_fim 			;Sai do modo jogo
 jogo_fim:
 	POP R9					; Devolve Registos
